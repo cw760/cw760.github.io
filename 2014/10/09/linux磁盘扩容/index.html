@@ -1,0 +1,245 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>linux磁盘扩容 | cw760&#39;s blog</title>
+  <meta name="author" content="cw760">
+  
+  <meta name="description" content="Something in the development">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="linux磁盘扩容"/>
+  <meta property="og:site_name" content="cw760&#39;s blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="alternate" href="/atom.xml" title="cw760&#39;s blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">cw760&#39;s blog</a></h1>
+  <h2><a href="/">工作上的积累，生活中的随笔，人生里的感悟</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-10-09T08:01:48.000Z"><a href="/2014/10/09/linux磁盘扩容/">2014-10-09</a></time>
+      
+      
+  
+    <h1 class="title">linux磁盘扩容</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>openstack上的centos6.4镜像中，只使用了10G不到的磁盘空间，其他都没动。跑个mysql后没过多久硬盘就100%了，mysql就很应景的跪了。悲催的人啊，国庆过完一上班就来调这玩意儿。因为之前没搞过这事，就写个博客记录下来，以供日后翻阅。<br><a id="more"></a></p>
+<h3 id="fdisk命令请点fdisk"><a href="#fdisk命令请点fdisk" class="headerlink" title="fdisk命令请点fdisk"></a>fdisk命令请点<a href="http://man.linuxde.net/fdisk" target="_blank" rel="noopener">fdisk</a></h3><h2 id="操作步骤"><a href="#操作步骤" class="headerlink" title="操作步骤"></a>操作步骤</h2><ol>
+<li>首先使用<em>df -T</em>查看使用情况<br><img src="/img/linux磁盘扩容/1.jpg" alt=""><br>悲剧吧，只有8G空间。</li>
+<li><em>fdisk -l</em> 查看磁盘情况<br><img src="/img/linux磁盘扩容/2.jpg" alt=""><br>/dev/vda明明有107G，可是只用了8G……</li>
+<li>来来来，<em>fdisk /dev/vda</em>进去分个区，把剩下的90多G空间整出来用。<br>选项p可以打印分区表<br><img src="/img/linux磁盘扩容/3.jpg" alt=""><br>n创建一个新的主分区，设置好起始柱面，结束可以不填，默认最后一个。然后用w保存。<br><img src="/img/linux磁盘扩容/4.jpg" alt=""></li>
+<li>再使用<em>fdisk -l</em>命令，就可以看到刚刚分区的vda3出现了。<br><img src="/img/linux磁盘扩容/5.jpg" alt=""></li>
+<li>挂载新建分区<br>使linux内核识别分区信息<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cat /proc/partitions</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p><img src="/img/linux磁盘扩容/6.jpg" alt=""><br>可以看到我们刚刚分出来的vda3分区并没有被系统识别到。这里就需要使用partprobe(redhat 5.x ,redhat 6.x需要重启)或者partx(redhat 6.x)命令来让系统识别新建的分区。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">partx -a /dev/vda</span><br><span class="line">partx -a /dev/vda</span><br><span class="line">cat /proc/partitions</span><br></pre></td></tr></table></figure></p>
+<p><img src="/img/linux磁盘扩容/7.jpg" alt=""><br>ps：partx命令的时候，第一次会出现<br> BLKPG: Device or resource busy<br> error adding partition 1<br> BLKPG: Device or resource busy<br> error adding partition 2<br>再执行一次后，就出现<br> BLKPG: Device or resource busy<br> error adding partition 1<br> BLKPG: Device or resource busy<br> error adding partition 2<br> BLKPG: Device or resource busy<br> error adding partition 3<br>这时/dev/vda3才成功挂载。<br>这里为什么会出现这个问题，还有待研究。</p>
+<ol>
+<li><p>将新分区格式化为ext4格式（这一步可以不做）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkfs.ext4 /dev/vda3</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>动态扩展系统分区</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">pvcreate /dev/vda3                          #创建pv</span><br><span class="line">vgextend vg_centos /dev/vda3                #将pv添加到vg（volume group）中</span><br><span class="line">lvextend -L +90G /dev/vg_centos/lv_root     #扩展lv_root。这里的容量视情况来定</span><br><span class="line">resize2fs /dev/vg_centos/lv_root            #激活扩展后的配置</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p><img src="/img/linux磁盘扩容/8.jpg" alt=""><br>查看磁盘使用情况，扩容成功。<br><img src="/img/linux磁盘扩容/9.jpg" alt=""></p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/linux/">linux</a>
+  </div>
+
+        <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">
+    </a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">
+    </a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">
+    </a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">
+    </a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">
+    </a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">
+    </a>
+</div>
+<script>
+    window._bd_share_config = {
+        "common": {
+            "bdSnsKey": {},
+            "bdText": "",
+            "bdMini": "1",
+            "bdMiniList": false,
+            "bdPic": "",
+            "bdStyle": "1",
+            "bdSize": "16"
+        },
+        "share": {},
+        "image": {
+            "viewList": ["qzone", "tsina", "tqq", "renren", "weixin"],
+            "viewText": "分享到：",
+            "viewSize": "16"
+        }
+    };
+    with(document) 0[(getElementsByTagName('head')[0] || body).appendChild(createElement('script')).src = 
+            'http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion=' 
+                    + ~ ( - new Date() / 36e5)];
+</script>
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="" data-title="linux磁盘扩容" data-url="http://cw760.github.io/2014/10/09/linux磁盘扩容/"></div>
+<!-- 多说评论框 end -->
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div align="center">
+<img src="/img/head.jpg" alt="logo"/>
+<br><a href="mailto:cw760@163.com">cw760@163.com</a>
+<br>
+<br>
+</div>
+
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:cw760.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/ceph/">ceph</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/">haproxy</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>3</small></li>
+  
+    <li><a href="/categories/nagios/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/ceph/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>2</small></li>
+  
+    <li><a href="/categories/nagios/">nagios</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/nginx/">nginx</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/VMware/" style="font-size: 10px;">VMware</a> <a href="/tags/ceph/" style="font-size: 10px;">ceph</a> <a href="/tags/gitlab/" style="font-size: 10px;">gitlab</a> <a href="/tags/haproxy/" style="font-size: 10px;">haproxy</a> <a href="/tags/linux/" style="font-size: 20px;">linux</a> <a href="/tags/mysql/" style="font-size: 15px;">mysql</a> <a href="/tags/nagios/" style="font-size: 10px;">nagios</a> <a href="/tags/nginx/" style="font-size: 10px;">nginx</a> <a href="/tags/tomcat/" style="font-size: 10px;">tomcat</a> <a href="/tags/转载/" style="font-size: 10px;">转载</a> <a href="/tags/运维/" style="font-size: 10px;">运维</a>
+  </div>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://ruikye.com/" title="Ruikye's Blog">Ruikye</a></li>
+<li><a href="http://zipperary.com/" title="Zippera's Blog">Zippera</a></li>
+<li><a href="http://planet.linuxdeepin.com/" title="国产优秀的基于ubuntu的linux发行版">Deepin</a></li>
+<li><a href="http://hrtsea.com/" title="著名winrar汉化作者——烈火的个人博客">心海e站</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2018 cw760
+  
+&nbsp;&nbsp;
+	<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1254029696'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1254029696%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"cw760"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+</body>
+</html>

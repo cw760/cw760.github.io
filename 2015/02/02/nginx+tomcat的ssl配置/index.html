@@ -1,0 +1,241 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>nginx+tomcat的ssl配置 | cw760&#39;s blog</title>
+  <meta name="author" content="cw760">
+  
+  <meta name="description" content="Something in the development">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="nginx+tomcat的ssl配置"/>
+  <meta property="og:site_name" content="cw760&#39;s blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="alternate" href="/atom.xml" title="cw760&#39;s blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">cw760&#39;s blog</a></h1>
+  <h2><a href="/">工作上的积累，生活中的随笔，人生里的感悟</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2015-02-02T08:14:55.000Z"><a href="/2015/02/02/nginx+tomcat的ssl配置/">2015-02-02</a></time>
+      
+      
+  
+    <h1 class="title">nginx+tomcat的ssl配置</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>首先，介绍下环境：<br>操作系统：CentOS 6.6<br>前端：nginx 1.6.2<br>后端：tomcat 7.0.55</p>
+<a id="more"></a>
+<p>编译安装nginx的时候已经安装有openssl和openssl-dev，这里就不需要再重新安装了。<br>1.生成key<br>使用openssl genrsa 生成一个key<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl genrsa -des3 -out ssl.key 1024</span><br></pre></td></tr></table></figure></p>
+<p>然后他会要求你输入这个key文件的密码。不推荐输入。因为以后要给nginx使用。每次reload nginx配置时候都要你验证这个PAM密码的。<br>由于生成时候必须输入密码。你可以输入后再删掉。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl rsa -in ssl.key -out ssl_nopass.key</span><br></pre></td></tr></table></figure></p>
+<p>2.生成证书请求文件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">opensll -req -new -key ssl.key -out ssl.csr</span><br></pre></td></tr></table></figure></p>
+<p>3.最后根据这两个文件生成crt证书文件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl x509 -req -days 365 -in ssl.csr -signkey ssl.key -out ssl.crt</span><br></pre></td></tr></table></figure></p>
+<p>这里365是证书有效期 推荐3650哈哈。这个大家随意。最后使用到的文件是key和crt文件</p>
+<p>如果需要用pfx 可以用以下命令生成<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">openssl pkcs12 -export -inkey ssl.key -in ssl.crt -out ssl.pfx</span><br></pre></td></tr></table></figure></p>
+<p>4.在需要使用证书的nginx配置文件的server节点里加入以下配置就可以了。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ssl on;</span><br><span class="line">ssl_certificate 	/home/ssl.crt;</span><br><span class="line">ssl_certificate_key /home/ssl.key;</span><br><span class="line">ssl_session_timeout 5m;</span><br><span class="line">ssl_protocols 		SSLv2 SSLv3 TLSv1;</span><br><span class="line">ssl_ciphers 		ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;</span><br><span class="line">ssl_prefer_server_ciphers on;</span><br></pre></td></tr></table></figure></p>
+<p>然后重启nginx就大功告成了</p>
+<h2 id="我在这里有一个问题，值得写出来与大家分享"><a href="#我在这里有一个问题，值得写出来与大家分享" class="headerlink" title="我在这里有一个问题，值得写出来与大家分享"></a>我在这里有一个问题，值得写出来与大家分享</h2><p>由于tomcat里面的应用，使用了springMVC的redirect，导致返回给客户端的url是http的，报错“ the plain http request was sent to https port”。<br>解决办法是是在location中添加一个proxy_redirect即可。如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">roxy_redirect http:// $scheme://;</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/linux/">linux</a>, <a href="/categories/linux/nginx/">nginx</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/nginx/">nginx</a>, <a href="/tags/运维/">运维</a>
+  </div>
+
+        <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">
+    </a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">
+    </a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">
+    </a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">
+    </a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">
+    </a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">
+    </a>
+</div>
+<script>
+    window._bd_share_config = {
+        "common": {
+            "bdSnsKey": {},
+            "bdText": "",
+            "bdMini": "1",
+            "bdMiniList": false,
+            "bdPic": "",
+            "bdStyle": "1",
+            "bdSize": "16"
+        },
+        "share": {},
+        "image": {
+            "viewList": ["qzone", "tsina", "tqq", "renren", "weixin"],
+            "viewText": "分享到：",
+            "viewSize": "16"
+        }
+    };
+    with(document) 0[(getElementsByTagName('head')[0] || body).appendChild(createElement('script')).src = 
+            'http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion=' 
+                    + ~ ( - new Date() / 36e5)];
+</script>
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="" data-title="nginx+tomcat的ssl配置" data-url="http://cw760.github.io/2015/02/02/nginx+tomcat的ssl配置/"></div>
+<!-- 多说评论框 end -->
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div align="center">
+<img src="/img/head.jpg" alt="logo"/>
+<br><a href="mailto:cw760@163.com">cw760@163.com</a>
+<br>
+<br>
+</div>
+
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:cw760.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/ceph/">ceph</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/">haproxy</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>3</small></li>
+  
+    <li><a href="/categories/nagios/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/ceph/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>2</small></li>
+  
+    <li><a href="/categories/nagios/">nagios</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/nginx/">nginx</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/VMware/" style="font-size: 10px;">VMware</a> <a href="/tags/ceph/" style="font-size: 10px;">ceph</a> <a href="/tags/gitlab/" style="font-size: 10px;">gitlab</a> <a href="/tags/haproxy/" style="font-size: 10px;">haproxy</a> <a href="/tags/linux/" style="font-size: 20px;">linux</a> <a href="/tags/mysql/" style="font-size: 15px;">mysql</a> <a href="/tags/nagios/" style="font-size: 10px;">nagios</a> <a href="/tags/nginx/" style="font-size: 10px;">nginx</a> <a href="/tags/tomcat/" style="font-size: 10px;">tomcat</a> <a href="/tags/转载/" style="font-size: 10px;">转载</a> <a href="/tags/运维/" style="font-size: 10px;">运维</a>
+  </div>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://ruikye.com/" title="Ruikye's Blog">Ruikye</a></li>
+<li><a href="http://zipperary.com/" title="Zippera's Blog">Zippera</a></li>
+<li><a href="http://planet.linuxdeepin.com/" title="国产优秀的基于ubuntu的linux发行版">Deepin</a></li>
+<li><a href="http://hrtsea.com/" title="著名winrar汉化作者——烈火的个人博客">心海e站</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2018 cw760
+  
+&nbsp;&nbsp;
+	<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1254029696'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1254029696%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"cw760"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+</body>
+</html>

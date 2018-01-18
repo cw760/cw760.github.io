@@ -1,0 +1,236 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>你有张良计，我有过墙梯——利用AWS免费服务搭建shadowsocks服务器教程 | cw760&#39;s blog</title>
+  <meta name="author" content="cw760">
+  
+  <meta name="description" content="Something in the development">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="你有张良计，我有过墙梯——利用AWS免费服务搭建shadowsocks服务器教程"/>
+  <meta property="og:site_name" content="cw760&#39;s blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="alternate" href="/atom.xml" title="cw760&#39;s blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">cw760&#39;s blog</a></h1>
+  <h2><a href="/">工作上的积累，生活中的随笔，人生里的感悟</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2016-01-27T02:57:28.000Z"><a href="/2016/01/27/你有张良计，我有过墙梯——利用AWS免费服务搭建shadowsocks服务器教程/">2016-01-27</a></time>
+      
+      
+  
+    <h1 class="title">你有张良计，我有过墙梯——利用AWS免费服务搭建shadowsocks服务器教程</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>利用亚马逊云AWS的一年免费套餐，搭建一个免费的shadowsocks梯子。请勿传播，谢谢。</p>
+<h2 id=""><a href="#" class="headerlink" title=""></a><a id="more"></a></h2><h3 id="1-申请AWS账号"><a href="#1-申请AWS账号" class="headerlink" title="1.申请AWS账号"></a>1.申请AWS账号</h3><p>进入注册连接注册一个新账号</p>
+<h2 id="注册过程略麻烦，倒数第二步中需要一张可用的外币或双币信用卡，注册过程会刷1USD的预授权费用，不是消费，不要担心。最后一步需要一个可以输入验证码的手机，在注册的最后一步，会让你填一个电话号码，然后给你打个电话，输入屏幕上提示的PIN码按-结束（我没注意听英语里讲的啥，凭感觉是按-结束）。"><a href="#注册过程略麻烦，倒数第二步中需要一张可用的外币或双币信用卡，注册过程会刷1USD的预授权费用，不是消费，不要担心。最后一步需要一个可以输入验证码的手机，在注册的最后一步，会让你填一个电话号码，然后给你打个电话，输入屏幕上提示的PIN码按-结束（我没注意听英语里讲的啥，凭感觉是按-结束）。" class="headerlink" title="注册过程略麻烦，倒数第二步中需要一张可用的外币或双币信用卡，注册过程会刷1USD的预授权费用，不是消费，不要担心。最后一步需要一个可以输入验证码的手机，在注册的最后一步，会让你填一个电话号码，然后给你打个电话，输入屏幕上提示的PIN码按#结束（我没注意听英语里讲的啥，凭感觉是按#结束）。"></a>注册过程略麻烦，倒数第二步中需要一张可用的外币或双币信用卡，注册过程会刷1USD的预授权费用，不是消费，不要担心。最后一步需要一个可以输入验证码的手机，在注册的最后一步，会让你填一个电话号码，然后给你打个电话，输入屏幕上提示的PIN码按#结束（我没注意听英语里讲的啥，凭感觉是按#结束）。</h2><h3 id="2-创建免费的ec2实例"><a href="#2-创建免费的ec2实例" class="headerlink" title="2.创建免费的ec2实例"></a>2.创建免费的ec2实例</h3><p>进入控制台，新建t2.micro实例。区域最好选择为东京Tokyo，其他区域网速略慢，不建议。<br>系统镜像选择CentOS7及以上版本。<br>开放22和80端口</p>
+<p>CentOS7 系统 CentOS-Extras 库中已带 Docker，可以直接安装：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo yum install docker</span><br></pre></td></tr></table></figure>
+<p>安装之后启动 Docker 服务，并让它随系统启动自动加载。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo service docker start</span><br><span class="line">sudo chkconfig docker on</span><br></pre></td></tr></table></figure></p>
+<hr>
+<h3 id="3-安装Shadowsocks的Docker镜像"><a href="#3-安装Shadowsocks的Docker镜像" class="headerlink" title="3.安装Shadowsocks的Docker镜像"></a>3.安装Shadowsocks的Docker镜像</h3><p>使用以下命令下载shadowsocks的docker镜像<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull oddrationale/docker-shadowsocks</span><br></pre></td></tr></table></figure></p>
+<p>运行镜像，启动Shadowsocks服务。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -p 80:8388 oddrationale/docker-shadowsocks -k cw760</span><br></pre></td></tr></table></figure></p>
+<h2 id="其中，-p后面的80-8388参数中的80是指ec2主机对外提供服务的端口，可以自定义（最好为1024-65535），8388是docker里面shadowsocks默认的端口。后面的-k参数是shadowsocks的密码，需要自定义，我这里用的cw760。shadowsocks默认的服务端口为8388，加密方式为aes-256-cfb，这里没有给出自定义的方式，感兴趣的读者可以自行查阅。"><a href="#其中，-p后面的80-8388参数中的80是指ec2主机对外提供服务的端口，可以自定义（最好为1024-65535），8388是docker里面shadowsocks默认的端口。后面的-k参数是shadowsocks的密码，需要自定义，我这里用的cw760。shadowsocks默认的服务端口为8388，加密方式为aes-256-cfb，这里没有给出自定义的方式，感兴趣的读者可以自行查阅。" class="headerlink" title="其中，-p后面的80:8388参数中的80是指ec2主机对外提供服务的端口，可以自定义（最好为1024~65535），8388是docker里面shadowsocks默认的端口。后面的-k参数是shadowsocks的密码，需要自定义，我这里用的cw760。shadowsocks默认的服务端口为8388，加密方式为aes-256-cfb，这里没有给出自定义的方式，感兴趣的读者可以自行查阅。"></a>其中，-p后面的80:8388参数中的80是指ec2主机对外提供服务的端口，可以自定义（最好为1024~65535），8388是docker里面shadowsocks默认的端口。后面的-k参数是shadowsocks的密码，需要自定义，我这里用的cw760。shadowsocks默认的服务端口为8388，加密方式为aes-256-cfb，这里没有给出自定义的方式，感兴趣的读者可以自行查阅。</h2><h3 id="4-配置shadowsocks客户端"><a href="#4-配置shadowsocks客户端" class="headerlink" title="4.配置shadowsocks客户端"></a>4.配置shadowsocks客户端</h3><p>windows客户端的下载地址:shadowsocks-windows</p>
+<p>服务器ip即为EC2主机的公共ip<br>服务器端口为80<br>密码cw760<br>加密方式默认aes-256-cfb即可<br>备注可不写<br><img src="/img/你有张良计，我有过墙梯——利用AWS免费服务搭建shadowsocks服务器教程/1.png" alt=""></p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/linux/">linux</a>
+  </div>
+
+        <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">
+    </a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">
+    </a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">
+    </a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">
+    </a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">
+    </a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">
+    </a>
+</div>
+<script>
+    window._bd_share_config = {
+        "common": {
+            "bdSnsKey": {},
+            "bdText": "",
+            "bdMini": "1",
+            "bdMiniList": false,
+            "bdPic": "",
+            "bdStyle": "1",
+            "bdSize": "16"
+        },
+        "share": {},
+        "image": {
+            "viewList": ["qzone", "tsina", "tqq", "renren", "weixin"],
+            "viewText": "分享到：",
+            "viewSize": "16"
+        }
+    };
+    with(document) 0[(getElementsByTagName('head')[0] || body).appendChild(createElement('script')).src = 
+            'http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion=' 
+                    + ~ ( - new Date() / 36e5)];
+</script>
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="" data-title="你有张良计，我有过墙梯——利用AWS免费服务搭建shadowsocks服务器教程" data-url="http://cw760.github.io/2016/01/27/你有张良计，我有过墙梯——利用AWS免费服务搭建shadowsocks服务器教程/"></div>
+<!-- 多说评论框 end -->
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div align="center">
+<img src="/img/head.jpg" alt="logo"/>
+<br><a href="mailto:cw760@163.com">cw760@163.com</a>
+<br>
+<br>
+</div>
+
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:cw760.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/ceph/">ceph</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/">haproxy</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>3</small></li>
+  
+    <li><a href="/categories/nagios/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/ceph/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>2</small></li>
+  
+    <li><a href="/categories/nagios/">nagios</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/nginx/">nginx</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/VMware/" style="font-size: 10px;">VMware</a> <a href="/tags/ceph/" style="font-size: 10px;">ceph</a> <a href="/tags/gitlab/" style="font-size: 10px;">gitlab</a> <a href="/tags/haproxy/" style="font-size: 10px;">haproxy</a> <a href="/tags/linux/" style="font-size: 20px;">linux</a> <a href="/tags/mysql/" style="font-size: 15px;">mysql</a> <a href="/tags/nagios/" style="font-size: 10px;">nagios</a> <a href="/tags/nginx/" style="font-size: 10px;">nginx</a> <a href="/tags/tomcat/" style="font-size: 10px;">tomcat</a> <a href="/tags/转载/" style="font-size: 10px;">转载</a> <a href="/tags/运维/" style="font-size: 10px;">运维</a>
+  </div>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://ruikye.com/" title="Ruikye's Blog">Ruikye</a></li>
+<li><a href="http://zipperary.com/" title="Zippera's Blog">Zippera</a></li>
+<li><a href="http://planet.linuxdeepin.com/" title="国产优秀的基于ubuntu的linux发行版">Deepin</a></li>
+<li><a href="http://hrtsea.com/" title="著名winrar汉化作者——烈火的个人博客">心海e站</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2018 cw760
+  
+&nbsp;&nbsp;
+	<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1254029696'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1254029696%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"cw760"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+</body>
+</html>

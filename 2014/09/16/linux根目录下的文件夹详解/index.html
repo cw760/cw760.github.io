@@ -1,0 +1,262 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>linux根目录下的文件夹详解 | cw760&#39;s blog</title>
+  <meta name="author" content="cw760">
+  
+  <meta name="description" content="Something in the development">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="linux根目录下的文件夹详解"/>
+  <meta property="og:site_name" content="cw760&#39;s blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="alternate" href="/atom.xml" title="cw760&#39;s blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">cw760&#39;s blog</a></h1>
+  <h2><a href="/">工作上的积累，生活中的随笔，人生里的感悟</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-09-16T07:53:15.000Z"><a href="/2014/09/16/linux根目录下的文件夹详解/">2014-09-16</a></time>
+      
+      
+  
+    <h1 class="title">linux根目录下的文件夹详解</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2 id="文件系统的类型"><a href="#文件系统的类型" class="headerlink" title="文件系统的类型"></a>文件系统的类型</h2><p> LINUX有四种基本文件系统类型：普通文件、目录文件、连接文件和特殊文件，可用file命令来识别。</p>
+<p> 普通文件：如文本文件、C语言元代码、SHELL脚本、二进制的可执行文件等，可用cat、less、more、vi、emacs来察看内容，用mv来改名。</p>
+<p> 目录文件：包括文件名、子目录名及其指针。它是LINUX储存文件名的唯一地方，可用ls列出目录文件。</p>
+<p> 连接文件：是指向同一索引节点的那些目录条目。用ls来查看是，连接文件的标志用l开头，而文件面后以”-&gt;”指向所连接的文件。</p>
+<a id="more"></a>
+<p> 特殊文件：LINUX的一些设备如磁盘、终端、打印机等都在文件系统中表示出来，则一类文件就是特殊文件，常放在/dev目录内。例如，软驱A称为/dev/fd0。LINUX无C：的概念，而是用/dev/had来自第一硬盘。</p>
+<h2 id="根目录下文件夹"><a href="#根目录下文件夹" class="headerlink" title="根目录下文件夹"></a>根目录下文件夹</h2><p> /<br>    这就是根目录。对你的电脑来说，有且只有一个根目录。所有的东西，我是说所有的东西都是从这里开始。举个例子：当你在终端里输入“/home”，你其实是在告诉电脑，先从/(根目录)开始，再进入到home目录。</p>
+<p> /root<br>    这是系统管理员(root user)的目录。对于系统来说，系统管理员就好比是上帝，它能对系统做任何事情，甚至包括删除你的文件。因此，请小心使用root帐号。</p>
+<p> /bin<br>    这里存放了标准的(或者说是缺省的)linux的工具，比如像“ls”、“vi”还有“more”等等。通常来说，这个目录已经包含在你的“path”系 统变量里面了。什么意思呢?就是：当你在终端里输入ls，系统就会去/bin目录下面查找是不是有ls这个程序。</p>
+<p> /etc<br>    这里主要存放了系统配置方面的文件。举个例子：你安装了samba这个套件，当你想要修改samba配置文件的时候，你会发现它们(配置文件)就在/etc/samba目录下。</p>
+<p>/dev<br>    这里主要存放与设备(包括外设)有关的文件(unix和linux系统均把设备当成文件)。想连线打印机吗?系统就是从这个目录开始工作的。另外还有一些包括磁盘驱动、USB驱动等都放在这个目录。</p>
+<p> /home<br>    这里主要存放你的个人数据。具体每个用户的设置文件，用户的桌面文件夹，还有用户的数据都放在这里。每个用户都有自己的用户目录，位置为：/home/用户名。当然，root用户除外。</p>
+<p>/tmp<br>    这是临时目录。对于某些程序来说，有些文件被用了一次两次之后，就不会再被用到，像这样的文件就放在这里。有些linux系统会定期自动对这个目录进行清理，因此，千万不要把重要的数据放在这里。</p>
+<p>/usr<br>    在这个目录下，你可以找到那些不适合放在/bin或/etc目录下的额外的工具。比如像游戏啊，一些打印工具啦等等。/usr目录包含了许多子目录： /usr/bin目录用于存放程序;/usr/share用于存放一些共享的数据，比如音乐文件或者图标等等;/usr/lib目录用于存放那些不能直接 运行的，但却是许多程序运行所必需的一些函数库文件。你的软件包管理器会自动帮你管理好/usr目录的。</p>
+<p>/opt<br>    这里主要存放那些可选的程序。你想尝试最新的firefox测试版吗?那就装到/opt目录下吧，这样，当你尝试完，想删掉firefox的时候，你就可 以直接删除它，而不影响系统其他任何设置。安装到/opt目录下的程序，它所有的数据、库文件等等都是放在同个目录下面。<br>    举个例子：刚才装的测试版firefox，就可以装到/opt/firefox_beta目录下，/opt/firefox_beta目录下面就包含了运 行firefox所需要的所有文件、库、数据等等。要删除firefox的时候，你只需删除/opt/firefox_beta目录即可，非常简单。</p>
+<p>/usr/local<br>    这里主要存放那些手动安装的软件，即不是通过“新立得”或apt-get安装的软件。它和/usr目录具有相类似的目录结构。<br>    最佳实践：让软件包管理器来管理/usr目录，而把自定义的脚本(scripts)放到/usr/local目录下面。</p>
+<p>/media<br>    有些linux的发行版使用这个目录来挂载那些usb接口的移动硬盘(包括U盘)、CD/DVD驱动器等等。</p>
+<p>补充：</p>
+<p>/bin 系统所需要的那些命令位于此目录，比如 ls、cp、mkdir等命令；功能和/usr/bin类似，这个目录中的文件都是可执行的、普通用户都可以使用的命令。作为基础系统所需要的最基础的命令就是放在这里（/usr/bin和/usr/sbin 类似与“/”根目录下对应的目录（/bin和/sbin），但不用于基本的启动（譬如，在紧急维护中）。大多数命令在这个目录下。 ）。</p>
+<p>/boot Linux的内核及引导系统程序所需要的文件目录，比如 vmlinuz initrd.img 文件都位于这个目录中。在一般情况下，GRUB或LILO系统引导管理器也位于这个目录。</p>
+<p>/lost+found 在ext2或ext3文件系统中，当系统意外崩溃或机器意外关机，而产生一些文件碎片放在这里。当系统启动的过程中fsck工具会检查这里，并修复已经损 坏的文件系统。 有时系统发生问题，有很多的文件被移到这个目录中，可能会用手工的方式来修复，或移到文件到原来的位置上。</p>
+<p>/mnt 这个目录一般是用于存放挂载储存设备的挂载目录的，比如有cdrom 等目录。可以参看/etc/fstab的定义。有时我们可以把让系统开机自动挂载文件系统，把挂载点放在这里也是可以的。主要看/etc/fstab中怎 么定义了；比如光驱可以挂载到/mnt/cdrom 。</p>
+<p>/opt 表示的是可选择的意思，有些软件包也会被安装在这里，也就是自定义软件包，比如在Fedora Core 5.0中，OpenOffice就是安装在这里。有些我们自己编译的软件包，就可以安装在这个目录中；通过源码包安装的软件，可以通过 ./configure –prefix=/opt/目录 。</p>
+<p>/proc 操作系统运行时，进程信息及内核信息（比如cpu、硬盘分区、内存信息等）存放在这里。/proc目录伪装的文件系统proc的挂载目录，proc并不是真正的文件系统，它的定义可以参见 /etc/fstab 。 </p>
+<p>/sbin 大多是涉及系统管理的命令的存放，是超级权限用户root的可执行命令存放地，普通用户无权限执行这个目录下的命令，这个目录和/usr/sbin; /usr/X11R6/sbin或/usr/local/sbin目录是相似的；我们记住就行了，凡是目录sbin中包含的都是root权限才能执行的。</p>
+<p>/usr 这个是系统存放程序的目录，比如命令、帮助文件等。这个目录下有很多的文件和目录。当我们安装一个Linux发行版官方提供的软件包时，大多安装在这里。 如果有涉及服务器配置文件的，会把配置文件安装在/etc目录中。/usr目录下包括涉及字体目录/usr/share/fonts ，帮助目录 /usr/share/man或/usr/share/doc，普通用户可执行文件目录/usr/bin 或/usr/local/bin 或/usr/X11R6/bin ，超级权限用户root的可执行命令存放目录，比如 /usr/sbin 或/usr/X11R6/sbin 或/usr/local/sbin 等；还有程序的头文件存放目录/usr/include。</p>
+<p>/var 这个目录的内容是经常变动的，看名字就知道，我们可以理解为vary的缩写，/var下有/var/log 这是用来存放系统日志的目录。/var/www目录是定义Apache服务器站点存放目录；/var/lib 用来存放一些库文件，比如MySQL的，以及MySQL数据库的的存放地； </p>
+<p>/usr/local 这个目录一般是用来存放用户自编译安装软件的存放目录；一般是通过源码包安装的软件，如果没有特别指定安装目录的话，一般是安装在这个目录中。这个目录下面有子目录。自己看看吧。</p>
+<p>/usr/share 系统共用的东西存放地，比如 /usr/share/fonts 是字体目录，/usr/share/doc和/usr/share/man帮助文件。</p>
+<p>/var/log 系统日志存放，分析日志要看这个目录的东西；</p>
+<p>/var/spool 打印机、邮件、代理服务器等假脱机目录.</p>
+<h2 id="以下摘抄自linuxdeepin百科"><a href="#以下摘抄自linuxdeepin百科" class="headerlink" title="以下摘抄自linuxdeepin百科"></a>以下摘抄自<a href="http://wiki.linuxdeepin.com/index.php?title=%E6%8C%82%E8%BD%BD%E7%82%B9" target="_blank" rel="noopener">linuxdeepin百科</a></h2><p>/   根目录，唯一必须挂载的目录。/是衍生以下挂载点的根源<br>/bin    主要存放用户经常使用的命令。静态且不可共享。<br>/boot   主要存放着系统的内核以及启动时所需要的文件，比如Linux内核文件vmlinuz和核心解压缩所需的RAM Disk文件initrd都 在这里，如果安装了grub，这里还会有Grub目录。静态且不可共享。<br>/dev    存放设备文件，比如/dev/sda代表第一块IDE硬盘。正常情况下，每种设备有一个独立的子目录，其中存放这些设备的内容。静态且不可共享。<br>/etc    主要存放系统管理所需的配置文件和子目录。静态且不可共享。<br>/home   用户的个人数据存放在主目录中，比如有个用户ztg，它的主目录就是/home/ztg。变化的且可共享。（可选）<br>/lib    主要存放系统最基本的函数库，几乎所有的应用程序都要用到这些函数库。它也在其 /lib/modules/内核_版本号 子目录中存放内核模块。静态且不可共享。（可选）<br>/lib32  专门存放系统的32位函数库<br>/lib64  专门存放系统的64位函数库<br>/lost found 平时是空的，当系统不正常关机后，这里保存一些文件的片段<br>/media  用途同mnt，比如挂载u盘等<br>/mnt    可以将别的文件系统临时挂载到这里，比如挂载windows硬盘分区。变化的且不可共享。<br>/opt    包含对系统操作并非基本的软件包。一般是用户安装的应用程序。<br>/proc   是一个虚拟的目录，由系统运行时产生，是系统内存的映射，可以通过直接访问这个目录来获取系统信息。注意：这个目录的内容不在硬盘上而是在内存里<br>/root   超级用户(也叫系统管理员或root用户)的主目录。变化的且不可共享。（可选）<br>/sbin   主要存放系统管理员使用的管理程序，其他的还有有/usr/sbin、/nsf/local/sbin。静态且不可共享。<br>/selinux    使用selinux的Linux，其安全级别可以达到B1级<br>/srv    存放一些服务启动之后需要服务的文件<br>/sys    系统的核心文件，这个目录是2．6内核的一个很大的变化，该目录下安装了2．6内核中新出现的一个系统文件Sysfs，Sysfs文件系统集成了下面三种文件系统信息：针对进程信息的proc文件系统、针对设备的devfs文件系统、针对伪终端的derpts文件系统。<br>/tmp    存放临时文件，需要经常清理，这是除了/usr/local目录以外一般用户可以使用的—个目录，启动时系统并不自动删除这里的文件，所以需要经常清理这里的无用文件。变化的且不可共享。<br>/usr    包含系统的主要程序、用户自行安装的程序、图形界面需要的文件、共享的目录与文件、命令程序文件、程序库，手册和其他文件等，这些文件—般不需要修改。静态且可共享。<br>/var    含系统执行过程中的经常变化的文件．例如打印机、邮件、新闻等假脱机目录、日志文件、格式化后的手册页以及一些应用程序的数据文件等。建议单独的放在一个分区。其中的各个子目录可以是可共享的，也可以是不可共享的。<br>Swap（交换分区）  类似于Windows的虚拟内存，就是当内存不足的时候，把一部分硬盘空间虚拟成内存使用,从而解决内存容量不足的情况</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/linux/">linux</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/linux/">linux</a>
+  </div>
+
+        <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">
+    </a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">
+    </a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">
+    </a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">
+    </a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">
+    </a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">
+    </a>
+</div>
+<script>
+    window._bd_share_config = {
+        "common": {
+            "bdSnsKey": {},
+            "bdText": "",
+            "bdMini": "1",
+            "bdMiniList": false,
+            "bdPic": "",
+            "bdStyle": "1",
+            "bdSize": "16"
+        },
+        "share": {},
+        "image": {
+            "viewList": ["qzone", "tsina", "tqq", "renren", "weixin"],
+            "viewText": "分享到：",
+            "viewSize": "16"
+        }
+    };
+    with(document) 0[(getElementsByTagName('head')[0] || body).appendChild(createElement('script')).src = 
+            'http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion=' 
+                    + ~ ( - new Date() / 36e5)];
+</script>
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="" data-title="linux根目录下的文件夹详解" data-url="http://cw760.github.io/2014/09/16/linux根目录下的文件夹详解/"></div>
+<!-- 多说评论框 end -->
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div align="center">
+<img src="/img/head.jpg" alt="logo"/>
+<br><a href="mailto:cw760@163.com">cw760@163.com</a>
+<br>
+<br>
+</div>
+
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:cw760.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/ceph/">ceph</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/">haproxy</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>3</small></li>
+  
+    <li><a href="/categories/nagios/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/ceph/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>2</small></li>
+  
+    <li><a href="/categories/nagios/">nagios</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/nginx/">nginx</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/VMware/" style="font-size: 10px;">VMware</a> <a href="/tags/ceph/" style="font-size: 10px;">ceph</a> <a href="/tags/gitlab/" style="font-size: 10px;">gitlab</a> <a href="/tags/haproxy/" style="font-size: 10px;">haproxy</a> <a href="/tags/linux/" style="font-size: 20px;">linux</a> <a href="/tags/mysql/" style="font-size: 15px;">mysql</a> <a href="/tags/nagios/" style="font-size: 10px;">nagios</a> <a href="/tags/nginx/" style="font-size: 10px;">nginx</a> <a href="/tags/tomcat/" style="font-size: 10px;">tomcat</a> <a href="/tags/转载/" style="font-size: 10px;">转载</a> <a href="/tags/运维/" style="font-size: 10px;">运维</a>
+  </div>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://ruikye.com/" title="Ruikye's Blog">Ruikye</a></li>
+<li><a href="http://zipperary.com/" title="Zippera's Blog">Zippera</a></li>
+<li><a href="http://planet.linuxdeepin.com/" title="国产优秀的基于ubuntu的linux发行版">Deepin</a></li>
+<li><a href="http://hrtsea.com/" title="著名winrar汉化作者——烈火的个人博客">心海e站</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2018 cw760
+  
+&nbsp;&nbsp;
+	<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1254029696'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1254029696%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"cw760"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>gitlab的搭建与使用 | cw760&#39;s blog</title>
+  <meta name="author" content="cw760">
+  
+  <meta name="description" content="Something in the development">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="gitlab的搭建与使用"/>
+  <meta property="og:site_name" content="cw760&#39;s blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="alternate" href="/atom.xml" title="cw760&#39;s blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">cw760&#39;s blog</a></h1>
+  <h2><a href="/">工作上的积累，生活中的随笔，人生里的感悟</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2015-02-12T08:49:57.000Z"><a href="/2015/02/12/gitlab的搭建与使用/">2015-02-12</a></time>
+      
+      
+  
+    <h1 class="title">gitlab的搭建与使用</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>鉴于功夫网的封锁能力越来越强，github也难免遭受误伤，周围的同事经常往github上push时超时。故需要在本地搭建一个git服务器，并将本地git服务器上的提交原封不动的push到github。在参考借鉴了许多方案，选择了gitlab这一开源、高仿github的解决方案。<br><a id="more"></a></p>
+<h2 id="gitlab的搭建"><a href="#gitlab的搭建" class="headerlink" title="gitlab的搭建"></a>gitlab的搭建</h2><p>bitnami上有集成好的一键安装包，选择好操作系统后直接下载。<a href="https://bitnami.com/stack/gitlab/installer" target="_blank" rel="noopener">点我下载</a><br>安装很简单，给下载的bitnami-gitlab-7.6.2-0-linux-x64-installer.run加上可执行权限后直接执行就行，中途输入一些参数，就静静等待安装完成了（赞一下bitnami，省了不少麻烦）。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">chmod +x bitnami-gitlab-7.6.2-0-linux-x64-installer.run</span><br><span class="line">./bitnami-gitlab-7.6.2-0-linux-x64-installer.run</span><br></pre></td></tr></table></figure></p>
+<p><img src="/img/gitlab的搭建与使用/1.jpg" alt=""></p>
+<h2 id="从github上导入已有项目"><a href="#从github上导入已有项目" class="headerlink" title="从github上导入已有项目"></a>从github上导入已有项目</h2><p>用安装时输入的账号与密码（此账号为管理员账号）登陆<a href="http://192.168.11.160:80，新建一个group，从github上导入项目，并设置镜像仓库和hook脚本，即可开始美妙的gitlab之旅了。" target="_blank" rel="noopener">http://192.168.11.160:80，新建一个group，从github上导入项目，并设置镜像仓库和hook脚本，即可开始美妙的gitlab之旅了。</a><br><img src="/img/gitlab的搭建与使用/2.jpg" alt=""><br>导入完成后，就是这个样子。<br><img src="/img/gitlab的搭建与使用/3.jpg" alt=""><br>gitlab的其他功能，基本上与github大同小异，大家可以慢慢摸索就好。</p>
+<h2 id="设置github为远程仓库"><a href="#设置github为远程仓库" class="headerlink" title="设置github为远程仓库"></a>设置github为远程仓库</h2><p><strong>注意：以下操作需切换到git用户</strong></p>
+<p>1.生成密钥对，并将公钥添加到github上。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo -u git ssh-keygen</span><br></pre></td></tr></table></figure></p>
+<p>使用<code>cat /home/git/.ssh/id_rsa.pub</code>得到公钥字符串，复制添加到github账户中。<br><img src="/img/gitlab的搭建与使用/7.jpg" alt=""><br>这样就把gitlab服务器上的公钥添加到github上了。</p>
+<p>2.编辑ssh配置文件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /home/git/.ssh/config</span><br></pre></td></tr></table></figure></p>
+<p>修改成如下内容：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Host github  </span><br><span class="line">IdentityFile /home/git/.ssh/id_rsa.pub</span><br><span class="line">HostName github.com  </span><br><span class="line">User git</span><br></pre></td></tr></table></figure></p>
+<p>使用<code>ssh -T git@github.com</code>测试配置是否正确。如出现<code>You&#39;ve successfully authenticated, but GitHub does not provide shell access.</code>字样，说明配置ok。</p>
+<p>3.为项目添加github镜像。<br>打开/opt/gitlab-7.6.2-0/apps/gitlab/repositories/incito/chenwei-private.git/，执行以下命令为仓库添加gitgub镜像。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">git remote add --mirror github github.com:incito/chenwei-private.git</span><br></pre></td></tr></table></figure></p>
+<p>4.添加hooks脚本<br>打开/opt/gitlab-7.6.2-0/apps/gitlab/repositories/incito/chenwei-private.git/，创建custom_hooks文件夹，添加post-receive脚本。<br>脚本内容如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash</span><br><span class="line"></span><br><span class="line">git push -q github</span><br></pre></td></tr></table></figure></p>
+<p>给脚本文件增加可执行权限<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod +x post-receive</span><br></pre></td></tr></table></figure></p>
+<h2 id="测试提交"><a href="#测试提交" class="headerlink" title="测试提交"></a>测试提交</h2><p>在eclipse里，把远程地址换成gitlab里面的地址，提交一个测试用的commit。<br><img src="/img/gitlab的搭建与使用/4.jpg" alt=""></p>
+<p>push到远程仓库<br><img src="/img/gitlab的搭建与使用/5.jpg" alt=""></p>
+<p>验证<br><img src="/img/gitlab的搭建与使用/6.jpg" alt=""></p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/gitlab/">gitlab</a>
+  </div>
+
+        <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">
+    </a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">
+    </a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">
+    </a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">
+    </a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">
+    </a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">
+    </a>
+</div>
+<script>
+    window._bd_share_config = {
+        "common": {
+            "bdSnsKey": {},
+            "bdText": "",
+            "bdMini": "1",
+            "bdMiniList": false,
+            "bdPic": "",
+            "bdStyle": "1",
+            "bdSize": "16"
+        },
+        "share": {},
+        "image": {
+            "viewList": ["qzone", "tsina", "tqq", "renren", "weixin"],
+            "viewText": "分享到：",
+            "viewSize": "16"
+        }
+    };
+    with(document) 0[(getElementsByTagName('head')[0] || body).appendChild(createElement('script')).src = 
+            'http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion=' 
+                    + ~ ( - new Date() / 36e5)];
+</script>
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="" data-title="gitlab的搭建与使用" data-url="http://cw760.github.io/2015/02/12/gitlab的搭建与使用/"></div>
+<!-- 多说评论框 end -->
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div align="center">
+<img src="/img/head.jpg" alt="logo"/>
+<br><a href="mailto:cw760@163.com">cw760@163.com</a>
+<br>
+<br>
+</div>
+
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:cw760.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/ceph/">ceph</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/">haproxy</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>3</small></li>
+  
+    <li><a href="/categories/nagios/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/ceph/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>2</small></li>
+  
+    <li><a href="/categories/nagios/">nagios</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/nginx/">nginx</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/VMware/" style="font-size: 10px;">VMware</a> <a href="/tags/ceph/" style="font-size: 10px;">ceph</a> <a href="/tags/gitlab/" style="font-size: 10px;">gitlab</a> <a href="/tags/haproxy/" style="font-size: 10px;">haproxy</a> <a href="/tags/linux/" style="font-size: 20px;">linux</a> <a href="/tags/mysql/" style="font-size: 15px;">mysql</a> <a href="/tags/nagios/" style="font-size: 10px;">nagios</a> <a href="/tags/nginx/" style="font-size: 10px;">nginx</a> <a href="/tags/tomcat/" style="font-size: 10px;">tomcat</a> <a href="/tags/转载/" style="font-size: 10px;">转载</a> <a href="/tags/运维/" style="font-size: 10px;">运维</a>
+  </div>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://ruikye.com/" title="Ruikye's Blog">Ruikye</a></li>
+<li><a href="http://zipperary.com/" title="Zippera's Blog">Zippera</a></li>
+<li><a href="http://planet.linuxdeepin.com/" title="国产优秀的基于ubuntu的linux发行版">Deepin</a></li>
+<li><a href="http://hrtsea.com/" title="著名winrar汉化作者——烈火的个人博客">心海e站</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2018 cw760
+  
+&nbsp;&nbsp;
+	<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1254029696'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1254029696%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"cw760"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+</body>
+</html>

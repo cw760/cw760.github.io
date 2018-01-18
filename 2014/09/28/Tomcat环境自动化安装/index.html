@@ -1,0 +1,241 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Tomcat环境自动化安装 | cw760&#39;s blog</title>
+  <meta name="author" content="cw760">
+  
+  <meta name="description" content="Something in the development">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Tomcat环境自动化安装"/>
+  <meta property="og:site_name" content="cw760&#39;s blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="alternate" href="/atom.xml" title="cw760&#39;s blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">cw760&#39;s blog</a></h1>
+  <h2><a href="/">工作上的积累，生活中的随笔，人生里的感悟</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-09-28T02:30:26.000Z"><a href="/2014/09/28/Tomcat环境自动化安装/">2014-09-28</a></time>
+      
+      
+  
+    <h1 class="title">Tomcat环境自动化安装</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>由于最近在捣腾服务器集群，经常涉及到tomcat安装，故偷懒写了个脚本来节省一丢丢慢慢敲命令的时间。</p>
+<p>压缩包内清单如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">jdk-7u67-linux-x64.tar.gz                   jdk安装包</span><br><span class="line">apache-tomcat-7.0.55.tar.gz                 tomcat安装包</span><br><span class="line">mysql-connector-java-5.1.30.jar             mysql驱动</span><br><span class="line">setup.sh                                    安装脚本</span><br><span class="line">tomcat                                      tomcat注册服务的文件</span><br><span class="line">README.md                                   说明文件</span><br></pre></td></tr></table></figure></p>
+<a id="more"></a>
+<p>下载连接：<a href="http://pan.baidu.com/s/1i3st3tb" target="_blank" rel="noopener">install.tar.gz</a></p>
+<hr>
+<h2 id="README-md"><a href="#README-md" class="headerlink" title="README.md"></a>README.md</h2><p>Tomcat环境在Linux下的自动化安装脚本</p>
+<h2 id="Tomcat-environment-auto-install"><a href="#Tomcat-environment-auto-install" class="headerlink" title="Tomcat environment auto install"></a>Tomcat environment auto install</h2><h3 id="安装-install"><a href="#安装-install" class="headerlink" title="安装|install"></a>安装|install</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">tar zxf install.tar.gz  #解压安装包</span><br><span class="line">cd install              #cd到install目录下</span><br><span class="line">chmod +x setup.sh       #给setup.sh添加可执行仅限</span><br><span class="line">sudo ./setup.sh         #执行setup.sh安装脚本</span><br></pre></td></tr></table></figure>
+<h3 id="如命使用tomcat-How-to-use"><a href="#如命使用tomcat-How-to-use" class="headerlink" title="如命使用tomcat|How to use"></a>如命使用tomcat|How to use</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo service tomcat (start/stop/restart)</span><br></pre></td></tr></table></figure>
+<h3 id="注意-Attention"><a href="#注意-Attention" class="headerlink" title="注意|Attention"></a>注意|Attention</h3><p>你需要自己根据自己的服务器配置选择性修改<em>setenv.sh</em>文件里的<strong>JAVA_OPTS</strong>参数。<br>You should modify the <strong>JAVA_OPTS</strong> which is in the <em>setenv.sh</em> by yourself to adapt your server’s environment.</p>
+<hr>
+<h2 id="setup-sh"><a href="#setup-sh" class="headerlink" title="setup.sh"></a>setup.sh</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line">#!/bin/bash</span><br><span class="line"></span><br><span class="line"># -----------------</span><br><span class="line"># install/</span><br><span class="line">#   *apache-tomcat-&#123;version&#125;.tar.gz</span><br><span class="line">#   *jdk-&#123;version&#125;-linux-x64.tar.gz</span><br><span class="line">#   *mysql-connector-java-&#123;version&#125;.jar</span><br><span class="line">#   *setup.sh</span><br><span class="line">#   *tomcat</span><br><span class="line"># ----------------</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"># Default environment variables</span><br><span class="line">JAVA_HOME=/usr/java</span><br><span class="line">JRE_HOME=/usr/java/jre</span><br><span class="line">CATALINA_HOME=/usr/local/tomcat</span><br><span class="line"></span><br><span class="line"># find the jdk&apos;s file and tomcat&apos;s file</span><br><span class="line">jdk_file=`ls |grep jdk-`</span><br><span class="line">tomcat_file=`ls |grep apache-tomcat`</span><br><span class="line"></span><br><span class="line"># install jdk &amp; set it&apos;s environment</span><br><span class="line">jdk_install()&#123;</span><br><span class="line">    tar zxf $jdk_file -C /opt</span><br><span class="line">    ln -s /opt/`ls /opt/|grep jdk` /usr/java</span><br><span class="line">    echo &quot;JAVA_HOME=/usr/java&quot;&gt;/etc/profile.d/java.sh</span><br><span class="line">    echo &quot;CLASSPATH=.:$JAVA_HOME/lib&quot;&gt;&gt;/etc/profile.d/java.sh</span><br><span class="line">    echo &quot;export PATH=$PATH:$JAVA_HOME/bin:$CLASSPATH&quot;&gt;&gt;/etc/profile.d/java.sh</span><br><span class="line"></span><br><span class="line">    update-alternatives --install &quot;/usr/bin/java&quot; &quot;java&quot; &quot;$&#123;JRE_HOME&#125;/bin/java&quot; 1</span><br><span class="line">    update-alternatives --install &quot;/usr/bin/javac&quot; &quot;javac&quot; &quot;$&#123;JAVA_HOME&#125;/bin/javac&quot; 1</span><br><span class="line">    update-alternatives --install &quot;/usr/bin/javaws&quot; &quot;javaws&quot; &quot;$&#123;JRE_HOME&#125;/bin/javaws&quot; 1</span><br><span class="line">    update-alternatives --set java $&#123;JRE_HOME&#125;/bin/java</span><br><span class="line">    update-alternatives --set javac $&#123;JAVA_HOME&#125;/bin/javac</span><br><span class="line">    update-alternatives --set javaws $&#123;JRE_HOME&#125;/bin/javaws</span><br><span class="line"></span><br><span class="line">    source /etc/profile</span><br><span class="line">    java -version</span><br><span class="line">&#125; </span><br><span class="line"></span><br><span class="line"># install tomcat &amp; set it&apos;s environment</span><br><span class="line">tomcat_install()&#123;</span><br><span class="line">    tar zxf $tomcat_file -C /opt/</span><br><span class="line">    tomcat_path=/opt/`ls /opt/|grep apache-tomcat`</span><br><span class="line">    ln -s $tomcat_path /usr/local/tomcat</span><br><span class="line">    echo &quot;JAVA_HOME=/usr/java/&quot;&gt;/usr/local/tomcat/bin/setenv.sh</span><br><span class="line">    echo &quot;CATALINA_HOME=/usr/local/tomcat&quot;&gt;/usr/local/tomcat/bin/setenv.sh</span><br><span class="line">    echo &apos;JAVA_OPTS=&quot;-server -XX:PermSize=256M -XX:MaxPermSize=256M -Dfile.encoding=UTF-8 -Duser.timezone=GMT+08 -Djava.security.egd=file:/dev/./urandom -Djava.awt.headless=true&quot;&apos;&gt;&gt;/usr/local/tomcat/bin/setenv.sh</span><br><span class="line">    # register tomcatd service</span><br><span class="line">    cp tomcat /etc/init.d/</span><br><span class="line">    chmod +x /etc/init.d/tomcat</span><br><span class="line"></span><br><span class="line">    cp mysql-connector-java-5.1.30.jar $tomcat_path/lib</span><br><span class="line"></span><br><span class="line">    groupadd tomcat</span><br><span class="line">    useradd -g tomcat tomcat</span><br><span class="line">    chown -R tomcat.tomcat /usr/local/tomcat /usr/local/tomcat/</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">jdk_install</span><br><span class="line">tomcat_install</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/linux/">linux</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/tomcat/">tomcat</a>
+  </div>
+
+        <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">
+    </a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">
+    </a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">
+    </a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">
+    </a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">
+    </a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">
+    </a>
+</div>
+<script>
+    window._bd_share_config = {
+        "common": {
+            "bdSnsKey": {},
+            "bdText": "",
+            "bdMini": "1",
+            "bdMiniList": false,
+            "bdPic": "",
+            "bdStyle": "1",
+            "bdSize": "16"
+        },
+        "share": {},
+        "image": {
+            "viewList": ["qzone", "tsina", "tqq", "renren", "weixin"],
+            "viewText": "分享到：",
+            "viewSize": "16"
+        }
+    };
+    with(document) 0[(getElementsByTagName('head')[0] || body).appendChild(createElement('script')).src = 
+            'http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion=' 
+                    + ~ ( - new Date() / 36e5)];
+</script>
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="" data-title="Tomcat环境自动化安装" data-url="http://cw760.github.io/2014/09/28/Tomcat环境自动化安装/"></div>
+<!-- 多说评论框 end -->
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div align="center">
+<img src="/img/head.jpg" alt="logo"/>
+<br><a href="mailto:cw760@163.com">cw760@163.com</a>
+<br>
+<br>
+</div>
+
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:cw760.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/ceph/">ceph</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/">haproxy</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>3</small></li>
+  
+    <li><a href="/categories/nagios/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/ceph/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>2</small></li>
+  
+    <li><a href="/categories/nagios/">nagios</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/nginx/">nginx</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/VMware/" style="font-size: 10px;">VMware</a> <a href="/tags/ceph/" style="font-size: 10px;">ceph</a> <a href="/tags/gitlab/" style="font-size: 10px;">gitlab</a> <a href="/tags/haproxy/" style="font-size: 10px;">haproxy</a> <a href="/tags/linux/" style="font-size: 20px;">linux</a> <a href="/tags/mysql/" style="font-size: 15px;">mysql</a> <a href="/tags/nagios/" style="font-size: 10px;">nagios</a> <a href="/tags/nginx/" style="font-size: 10px;">nginx</a> <a href="/tags/tomcat/" style="font-size: 10px;">tomcat</a> <a href="/tags/转载/" style="font-size: 10px;">转载</a> <a href="/tags/运维/" style="font-size: 10px;">运维</a>
+  </div>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://ruikye.com/" title="Ruikye's Blog">Ruikye</a></li>
+<li><a href="http://zipperary.com/" title="Zippera's Blog">Zippera</a></li>
+<li><a href="http://planet.linuxdeepin.com/" title="国产优秀的基于ubuntu的linux发行版">Deepin</a></li>
+<li><a href="http://hrtsea.com/" title="著名winrar汉化作者——烈火的个人博客">心海e站</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2018 cw760
+  
+&nbsp;&nbsp;
+	<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1254029696'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1254029696%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"cw760"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+</body>
+</html>

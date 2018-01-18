@@ -1,0 +1,288 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>ceph集群搭建手记 | cw760&#39;s blog</title>
+  <meta name="author" content="cw760">
+  
+  <meta name="description" content="Something in the development">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="ceph集群搭建手记"/>
+  <meta property="og:site_name" content="cw760&#39;s blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="alternate" href="/atom.xml" title="cw760&#39;s blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">cw760&#39;s blog</a></h1>
+  <h2><a href="/">工作上的积累，生活中的随笔，人生里的感悟</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-12-22T08:20:02.000Z"><a href="/2014/12/22/ceph集群搭建手记/">2014-12-22</a></time>
+      
+      
+  
+    <h1 class="title">ceph集群搭建手记</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>参考官方文档，记录一下ceph的安装过程，以备以后查阅。</p>
+<p>先暂把集群搭起来，故只用了最低配置：用了三台服务器，一台mon节点（兼部署时的admin）节点，两台osd节点。一旦这个集群是active + clean状态, 通过增加第三个Ceph OSD 守护进程，一个元数据服务器(mds)和另外两个Ceph监控器(mon)来扩展它。<br><a id="more"></a></p>
+<h2 id="环境说明"><a href="#环境说明" class="headerlink" title="环境说明"></a>环境说明</h2><p>host            ip                  OS<br>mon-1      192.168.51.235      centos 6.6<br>osd-1      192.168.51.236      centos 6.6<br>osd-2      192.168.51.237      centos 6.6</p>
+<h2 id="预检"><a href="#预检" class="headerlink" title="预检"></a>预检</h2><p>1.修改yum源，安装ceph-deploy<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/yum.repos.d/ceph.repo</span><br></pre></td></tr></table></figure></p>
+<p>添加如下内容，并修改ceph-release和distro。这里我ceph-release用的是giant，distro是centos6，故改成el6。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[ceph-noarch]</span><br><span class="line">name=Ceph noarch packages</span><br><span class="line">baseurl=http://ceph.com/rpm-&#123;ceph-release&#125;/&#123;distro&#125;/noarch</span><br><span class="line">enabled=1</span><br><span class="line">gpgcheck=1</span><br><span class="line">type=rpm-md</span><br><span class="line">gpgkey=https://ceph.com/git/?p=ceph.git;a=blob_plain;f=keys/release.asc</span><br></pre></td></tr></table></figure></p>
+<p>更新源后安装ceph-deploy<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo yum update &amp;&amp; sudo yum install ceph-deploy</span><br></pre></td></tr></table></figure></p>
+<p>2.更改节点的hostname<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/sysconfig/network</span><br></pre></td></tr></table></figure></p>
+<p>修改后的内容如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">NETWORKING=yes</span><br><span class="line">HOSTNAME=mon-1</span><br></pre></td></tr></table></figure></p>
+<p>其他机器的hostname依次改成osd-1，osd-2。重启后生效。<br>3.所有节点安装ntp服务，确保集群内所有节点时间一致。<br>安装ntp和ntpdate，并通过修改ntp配置文件（/etc/ntp.conf）使各节点从同一个服务器同步时间，从而保证所有节点时间一致。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">yum install ntp ntpdate</span><br><span class="line">service ntpd restart</span><br></pre></td></tr></table></figure></p>
+<p>4.新建ceph用户<br>admin节点需要可以无密码ssh访问其他节点，并且ssh的用户必须拥有sudo权限。<br>新建用户的操作需要在每台节点上都要操作。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">useradd -d /home/ceph -m ceph</span><br><span class="line">passwd ceph</span><br></pre></td></tr></table></figure></p>
+<p>为新建用户添加sudo权限<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">echo &quot;ceph ALL = (root) NOPASSWD:ALL&quot; | tee /etc/sudoers.d/ceph</span><br><span class="line">chmod 0440 /etc/sudoers.d/ceph</span><br></pre></td></tr></table></figure></p>
+<p>5.切换到ceph用户，生成ssh密钥对，并将公钥添加到其他节点的ceph用户信任公钥里。<br>在新建密钥对的时候，密码留空。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[ceph@mon-1 ~]$ ssh-keygen </span><br><span class="line">Generating public/private rsa key pair.</span><br><span class="line">Enter file in which to save the key (/home/ceph/.ssh/id_rsa): </span><br><span class="line">Created directory &apos;/home/ceph/.ssh&apos;.</span><br><span class="line">Enter passphrase (empty for no passphrase): </span><br><span class="line">Enter same passphrase again: </span><br><span class="line">Your identification has been saved in /home/ceph/.ssh/id_rsa.</span><br><span class="line">Your public key has been saved in /home/ceph/.ssh/id_rsa.pub.</span><br><span class="line">......</span><br></pre></td></tr></table></figure></p>
+<p>将公钥复制到其他节点上<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ssh-copy-id ceph@osd-1</span><br><span class="line">ssh-copy-id ceph@osd-2</span><br></pre></td></tr></table></figure></p>
+<p>编辑.ssh/config文件，使admin节点ssh和scp到其他节点的时候不需要指定用户。修改后的文件如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[ceph@mon-1 ~]$ vi .ssh/config</span><br><span class="line">Host mon-1</span><br><span class="line">        Hostname        mon-1</span><br><span class="line">        User            ceph</span><br><span class="line">Host osd-1</span><br><span class="line">        Hostname        osd-1</span><br><span class="line">        User            ceph</span><br><span class="line">Host osd-2      </span><br><span class="line">        Hostname        osd-2</span><br><span class="line">        User            ceph</span><br></pre></td></tr></table></figure></p>
+<p>并将权限设置为0600<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod 0600 .ssh/config</span><br></pre></td></tr></table></figure></p>
+<p>6.配置防火墙，打开所需端口，monitor节点需要6789端口，osd节点需要6800:7000端口。配置方法这里不详述。<br>7.在centos和redhat里，还需要使用visudo命令编辑/etc/sudoers文件，修改#Defaults requiretty#这一行为#Defaults:ceph !requiretty#，或者将这一行注释掉。注：每个节点都<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#Defaults    requiretty</span><br><span class="line">Defaults:ceph    !requiretty</span><br></pre></td></tr></table></figure></p>
+<p>8.关闭安全策略<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setenforce 0</span><br></pre></td></tr></table></figure></p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>以下操作均在admin节点的ceph用户环境下。<br>1.安装前准备<br>新建文件夹<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir ceph</span><br><span class="line">cd ceph</span><br></pre></td></tr></table></figure></p>
+<p>如果以前有安装过ceph，或在安装过程出错需要重新安装时，请用以下的命令清除之前的安装信息<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ceph-deploy purgedata &#123;ceph-node&#125; [&#123;ceph-node&#125;]</span><br><span class="line">ceph-deploy forgetkeys</span><br></pre></td></tr></table></figure></p>
+<p>也可以用以下命令来清除指定节点上的ceph包<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph-deploy purge &#123;ceph-node&#125; [&#123;ceph-node&#125;]</span><br></pre></td></tr></table></figure></p>
+<p>2.配置mon节点<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph-deploy new mon-1</span><br></pre></td></tr></table></figure></p>
+<p>执行完上面的命令后，使用ll命令可以看到ceph文件夹下的ceph.conf、ceph.log和ceph.mon.keyring三个文件。<br>修改ceph.conf文件。因为我们只有两个osd节点，要激活active+clean模式，必须修改此配置文件。在[gloable]下增加“osd pool default size = 2”，修改后的文件如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[global]</span><br><span class="line">auth_service_required = cephx</span><br><span class="line">filestore_xattr_use_omap = true</span><br><span class="line">auth_cluster_required = cephx</span><br><span class="line">auth_client_required = cephx</span><br><span class="line">ms_bind_ipv6 = true</span><br><span class="line">mon_host = [::1]</span><br><span class="line">mon_initial_members = localhost</span><br><span class="line">fsid = 3030a1a7-b31e-4756-b411-59411d329764</span><br><span class="line">osd pool default size = 2</span><br></pre></td></tr></table></figure></p>
+<p>如果有多块网卡，还需要配置public network项。<br>3.安装ceph<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph-deploy install mon-1 osd-1 osd-2</span><br></pre></td></tr></table></figure></p>
+<p>注意：我在这里出现如下一个error：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">[mon-1][INFO  ] Running command: rpm -Uvh --replacepkgs http://ceph.com/rpm-giant/el6/noarch/ceph-release-1-0.el6.noarch.rpm</span><br><span class="line">[mon-1][WARNIN] curl: (22) The requested URL returned error: 404 Not Found</span><br><span class="line">[mon-1][DEBUG ] Retrieving http://ceph.com/rpm-giant/el6/noarch/ceph-release-1-0.el6.noarch.rpm</span><br><span class="line">[mon-1][WARNIN] error: skipping http://ceph.com/rpm-giant/el6/noarch/ceph-release-1-0.el6.noarch.rpm - transfer failed</span><br><span class="line">[mon-1][ERROR ] RuntimeError: command returned non-zero exit status: 1</span><br><span class="line">[ceph_deploy][ERROR ] RuntimeError: Failed to execute command: rpm -Uvh --replacepkgs http://ceph.com/rpm-giant/el6/noarch/ceph-release-1-0.el6.noarch.rpm</span><br></pre></td></tr></table></figure></p>
+<p>网上找到如下解决办法：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph-deploy install --repo-url http://ceph.com/rpm-giant/el6/ mon-1 osd-1 osd-2</span><br></pre></td></tr></table></figure></p>
+<p>在安装过程中，如果出现超时错误，可以手动执行 sudo yum install ceph。<br>4.初始化监控节点，收集key<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph-deploy mon create-initial</span><br></pre></td></tr></table></figure></p>
+<p>执行完这一步后，在文件夹里会看到<code>ceph.bootstrap-mds.keyring</code>、<code>ceph.bootstrap-osd.keyring</code>、<code>ceph.client.admin.keyring</code>、<code>ceph.mon.keyring</code>四个keyring文件。<br>5.准备并激活OSD节点<br>我在这里使用文件夹代替使用整块硬盘。<br>先ssh到各osd节点，在/var/local/下新建osd文件夹<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ssh osd-1</span><br><span class="line">sudo mkdir /var/local/osd1</span><br><span class="line">exit</span><br><span class="line"></span><br><span class="line">ssh osd-2</span><br><span class="line">sudo mkdir /var/local/osd2</span><br><span class="line">exit</span><br></pre></td></tr></table></figure></p>
+<p>使用<code>ceph-deploy osd prepare</code>命令准备osd节点<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph-deploy osd prepare osd-1:/var/local/osd1 osd-2:/var/local/osd2</span><br></pre></td></tr></table></figure></p>
+<p>然后激活osd<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph-deploy osd activate osd-1:/var/local/osd1 osd-2:/var/local/osd2</span><br></pre></td></tr></table></figure></p>
+<p>官方文档上说用<code>ceph-deploy osd create</code>命令可以一步执行prepare和activate命令，没尝试成功。<br>6.复制配置文件和admin key到管理节点和osd节点<br>使用ceph-deploy命令将配置文件和管理密钥复制到管理节点和你的Ceph节点。下次你再使用ceph命令界面时就无需指定集群监视器地址，执行命令时也无需每次都指定ceph.client.admin.keyring。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph-deploy admin mon-1 osd-1 osd-2</span><br></pre></td></tr></table></figure></p>
+<p>7.给<code>ceph.client.admin.keyring</code>文件读权限<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo chmod +r /etc/ceph/ceph.client.admin.keyring</span><br></pre></td></tr></table></figure></p>
+<p>8.检查ceph集群是否健康<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph health</span><br></pre></td></tr></table></figure></p>
+<p>或用<code>ceph status</code>查看集群的状态。ps：因为我在集群搭建完成后又添加了一个osd节点，故这里显示有3个osd节点。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[ceph@mon-1 my-cluster]$ ceph status</span><br><span class="line">    cluster 85da1883-3767-4100-8917-c80271b7f89b</span><br><span class="line">     health HEALTH_OK</span><br><span class="line">     monmap e1: 1 mons at &#123;mon-1=192.168.51.99:6789/0&#125;, election epoch 1, quorum 0 mon-1</span><br><span class="line">     osdmap e39: 3 osds: 3 up, 3 in</span><br><span class="line">      pgmap v78: 64 pgs, 1 pools, 0 bytes data, 0 objects</span><br><span class="line">            18421 MB used, 31623 MB / 52743 MB avail</span><br><span class="line">                  64 active+clean</span><br></pre></td></tr></table></figure></p>
+<p>看到返回的结果为<code>active+clean</code>状态，说明集群ok。</p>
+<h2 id="扩展"><a href="#扩展" class="headerlink" title="扩展"></a>扩展</h2><p>在这里演示扩展添加osd、mds、mon节点。采用centos 6.6操作系统。<br>首先，需要按照<em>预检</em>步骤里一样，添加ceph用户，修改hosts，在~/.ssh/config里添加osd、mds、mon节点信息，安装ntp服务确保集群里面的所有节点时间一致，关闭selinux，配置好iptables或关闭防火墙。</p>
+<h3 id="添加osd节点"><a href="#添加osd节点" class="headerlink" title="添加osd节点"></a>添加osd节点</h3><p>host            ip                  OS<br>osd-3      192.168.51.240      centos 6.6</p>
+<p>1.在管理节点（我这里用的mon-1）使用<code>ceph-deploy install</code>命令安装ceph到osd-3<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph-deploy install osd-3</span><br></pre></td></tr></table></figure></p>
+<p>在这里如果遇到<code>[WARNIN] curl: (22) The requested URL returned error: 404 Not Found</code>的错误，请加上<code>--repo-url</code>参数重新安装一遍。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph-deploy install --repo-url http://ceph.com/rpm-giant/el6/ osd-3</span><br></pre></td></tr></table></figure></p>
+<p>2.ssh到osd3节点上，创建<code>/var/local/osd3</code>文件夹<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">ssh osd-3</span><br><span class="line">sudo mkdir /var/local/osd3</span><br><span class="line">exit</span><br></pre></td></tr></table></figure></p>
+<p>3.准备并激活osd节点<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ceph-deploy osd prepare osd-3:/var/local/osd3</span><br><span class="line">ceph-deploy osd activate osd-3:/var/local/osd3</span><br></pre></td></tr></table></figure></p>
+<p>4.复制配置文件和admin key到osd节点<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph-deploy admin osd-3</span><br></pre></td></tr></table></figure></p>
+<p>5.查看集群状态<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph status</span><br></pre></td></tr></table></figure></p>
+<h3 id="添加mds节点"><a href="#添加mds节点" class="headerlink" title="添加mds节点"></a>添加mds节点</h3><p>host            ip                  OS<br>mds-1      192.168.51.141      centos 6.6</p>
+<p>如同添加osd节点一样，先安装好ceph，然后用下面的命令添加mds节点到集群。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph-deploy mds create mds-1</span><br></pre></td></tr></table></figure></p>
+<h3 id="添加mon节点"><a href="#添加mon节点" class="headerlink" title="添加mon节点"></a>添加mon节点</h3><p>host            ip                  OS<br>mds-2      192.168.51.99      centos 6.6<br>mds-2      192.168.51.219     centos 6.6</p>
+<p>一个Ceph存储集群至少需要一台Ceph监视器。为了保证高可用性，Ceph存储集群中通常会运行多个Ceph监视器，任意单台Ceph监视器的宕机都不会影响整个Ceph存储集群正常工作。由于Ceph使用Paxos算法，这需要多个Ceph监视器组成Quoram(如1，2:3，3:4，3:5，4:6等)。<br>安装好ceph后，利用下面命令将原有的mon节点和待添加的mon节点添加到集群中。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph-deploy mon create mon-2 mon-3</span><br></pre></td></tr></table></figure></p>
+<p>当你增加Ceph监视器后，Ceph将开始同步各监视器并形成Quoram。你可通过如下方式检查Quoram状态：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph quorum_status --format json-pretty</span><br></pre></td></tr></table></figure></p>
+<h2 id="使用ceph存储对象数据"><a href="#使用ceph存储对象数据" class="headerlink" title="使用ceph存储对象数据"></a>使用ceph存储对象数据</h2><p>为了能够操作Ceph存储集群中的对象数据，Ceph客户端必需满足：</p>
+<pre><code>1. 设置一个对象名
+2. 指定一个数据池
+</code></pre><p>Ceph客户端取回最新的集群映射表，并根据CRUSH算法先计算如何将对象映射到某个PG中，然后再计算如何将该PG动态映射入一个Ceph OSD进程上。为了查找对象位置，你需要的仅仅是对象名称和数据池名称，例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ceph osd map &#123;poolname&#125; &#123;object-name&#125;</span><br></pre></td></tr></table></figure></p>
+<p>练习：定位一个对象</p>
+<p>作为一个练习，我们先创建一个对象。使用rados put命令指定对象名称、存储对象数据的测试文件路径和地址池名称。例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rados put &#123;object-name&#125; &#123;file-path&#125; --pool=data</span><br><span class="line">rados put test-object-1 testfile.txt --pool=data</span><br></pre></td></tr></table></figure></p>
+<p>为了验证Ceph存储集群已存储该对象，执行如下命令：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rados -p data ls</span><br></pre></td></tr></table></figure></p>
+<p>现在，可标识对象位置：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ceph osd map &#123;pool-name&#125; &#123;object-name&#125;</span><br><span class="line">ceph osd map data test-object-1</span><br></pre></td></tr></table></figure></p>
+<p>Ceph将输出对象位置信息，例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">osdmap e537 pool &apos;data&apos; (0) object &apos;test-object-1&apos; -&gt; pg 0.d1743484 (0.4) -&gt; up [1,0] acting [1,0]</span><br></pre></td></tr></table></figure></p>
+<p>如果要删除测试对象，使用rados rm命令即可，例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rados rm test-object-1 --pool=data</span><br></pre></td></tr></table></figure></p>
+<p>当集群扩展后，对象位置可能会动态变更。Ceph动态平衡的一个好处就是Ceph可自动完成迁移而无须你手动操作。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/ceph/">ceph</a>, <a href="/categories/ceph/linux/">linux</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/ceph/">ceph</a>
+  </div>
+
+        <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">
+    </a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">
+    </a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">
+    </a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">
+    </a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">
+    </a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">
+    </a>
+</div>
+<script>
+    window._bd_share_config = {
+        "common": {
+            "bdSnsKey": {},
+            "bdText": "",
+            "bdMini": "1",
+            "bdMiniList": false,
+            "bdPic": "",
+            "bdStyle": "1",
+            "bdSize": "16"
+        },
+        "share": {},
+        "image": {
+            "viewList": ["qzone", "tsina", "tqq", "renren", "weixin"],
+            "viewText": "分享到：",
+            "viewSize": "16"
+        }
+    };
+    with(document) 0[(getElementsByTagName('head')[0] || body).appendChild(createElement('script')).src = 
+            'http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion=' 
+                    + ~ ( - new Date() / 36e5)];
+</script>
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="" data-title="ceph集群搭建手记" data-url="http://cw760.github.io/2014/12/22/ceph集群搭建手记/"></div>
+<!-- 多说评论框 end -->
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div align="center">
+<img src="/img/head.jpg" alt="logo"/>
+<br><a href="mailto:cw760@163.com">cw760@163.com</a>
+<br>
+<br>
+</div>
+
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:cw760.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/ceph/">ceph</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/">haproxy</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>3</small></li>
+  
+    <li><a href="/categories/nagios/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/ceph/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>2</small></li>
+  
+    <li><a href="/categories/nagios/">nagios</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/nginx/">nginx</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/VMware/" style="font-size: 10px;">VMware</a> <a href="/tags/ceph/" style="font-size: 10px;">ceph</a> <a href="/tags/gitlab/" style="font-size: 10px;">gitlab</a> <a href="/tags/haproxy/" style="font-size: 10px;">haproxy</a> <a href="/tags/linux/" style="font-size: 20px;">linux</a> <a href="/tags/mysql/" style="font-size: 15px;">mysql</a> <a href="/tags/nagios/" style="font-size: 10px;">nagios</a> <a href="/tags/nginx/" style="font-size: 10px;">nginx</a> <a href="/tags/tomcat/" style="font-size: 10px;">tomcat</a> <a href="/tags/转载/" style="font-size: 10px;">转载</a> <a href="/tags/运维/" style="font-size: 10px;">运维</a>
+  </div>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://ruikye.com/" title="Ruikye's Blog">Ruikye</a></li>
+<li><a href="http://zipperary.com/" title="Zippera's Blog">Zippera</a></li>
+<li><a href="http://planet.linuxdeepin.com/" title="国产优秀的基于ubuntu的linux发行版">Deepin</a></li>
+<li><a href="http://hrtsea.com/" title="著名winrar汉化作者——烈火的个人博客">心海e站</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2018 cw760
+  
+&nbsp;&nbsp;
+	<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1254029696'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1254029696%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"cw760"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+</body>
+</html>

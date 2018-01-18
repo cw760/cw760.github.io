@@ -1,0 +1,239 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>mysql双主集群搭建 | cw760&#39;s blog</title>
+  <meta name="author" content="cw760">
+  
+  <meta name="description" content="Something in the development">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="mysql双主集群搭建"/>
+  <meta property="og:site_name" content="cw760&#39;s blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="alternate" href="/atom.xml" title="cw760&#39;s blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">cw760&#39;s blog</a></h1>
+  <h2><a href="/">工作上的积累，生活中的随笔，人生里的感悟</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2015-05-25T02:57:14.000Z"><a href="/2015/05/25/mysql双主集群搭建/">2015-05-25</a></time>
+      
+      
+  
+    <h1 class="title">mysql双主集群搭建</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>本文介绍如何搭建两台mysql服务器，实现Dual-Master（双主）集群。至于使用方面的问题，暂不讨论。</p>
+<h3 id="环境介绍："><a href="#环境介绍：" class="headerlink" title="环境介绍："></a>环境介绍：</h3><p>OS:    CentOS 6.6 64位<br>ip:    192.168.1.110 192.168.1.120<br>mysql版本:    5.6.13<br><a id="more"></a></p>
+<h3 id="1-分别在两台服务器上安装同一版本的mysql。"><a href="#1-分别在两台服务器上安装同一版本的mysql。" class="headerlink" title="1.分别在两台服务器上安装同一版本的mysql。"></a>1.分别在两台服务器上安装同一版本的mysql。</h3><p>安装过程如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"># 首先解压mysql安装包到/opt下</span><br><span class="line">tar zxvf mysql-advanced-5.6.13-linux-glibc2.5-x86_64.tar.gz /opt/</span><br><span class="line"># 建立软链接</span><br><span class="line">ln -s mysql-advanced-5.6.13-linux-glibc2.5-x86_64 /usr/local/mysql</span><br><span class="line"># 安装依赖包</span><br><span class="line">yum -y install libaio perl</span><br><span class="line"># 添加mysql用户</span><br><span class="line">groupadd mysql</span><br><span class="line">useradd -r -g mysql mysql</span><br><span class="line"># 更改目录所属用户</span><br><span class="line">chown -R mysql.mysql /usr/local/mysql</span><br><span class="line"># 执行mysql安装脚本，这里的--datadir可以自定义为mysql用户可以访问的任何位置</span><br><span class="line">/usr/local/mysql/scripts/mysql_install_db --user=mysql --basedir=/usr/local/mysql --datadir=/usr/local/mysql/data</span><br><span class="line"># 安装mysqld系统服务</span><br><span class="line">cp /usr/local/mysql/support-files/mysql.server /etc/init.d/mysqld</span><br><span class="line"># 设置mysql环境变量</span><br><span class="line">echo &quot;MYSQL_HOME=/usr/local/mysql&quot;&gt;/etc/profile.d/mysql.sh</span><br><span class="line">echo &apos;export PATH=$PATH:$MYSQL_HOME/bin&apos;&gt;&gt;/etc/profile.d/mysql.sh</span><br><span class="line">source /etc/profile</span><br></pre></td></tr></table></figure></p>
+<hr>
+<h3 id="2-修改my-cnf，启动mysql服务"><a href="#2-修改my-cnf，启动mysql服务" class="headerlink" title="2.修改my.cnf，启动mysql服务"></a>2.修改my.cnf，启动mysql服务</h3><p>修改如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">[mysqld]</span><br><span class="line"></span><br><span class="line"># Remove leading # and set to the amount of RAM for the most important data</span><br><span class="line"># cache in MySQL. Start at 70% of total RAM for dedicated server, else 10%.</span><br><span class="line"># innodb_buffer_pool_size = 128M</span><br><span class="line"></span><br><span class="line"># Remove leading # to turn on a very important data integrity option: logging</span><br><span class="line"># changes to the binary log between backups.</span><br><span class="line"> # 这个必须打开</span><br><span class="line"> log_bin = mysql-bin</span><br><span class="line"></span><br><span class="line"># These are commonly set, remove the # and set as required.</span><br><span class="line"> basedir = /usr/local/mysql</span><br><span class="line"> datadir = /usr/local/mysql/data</span><br><span class="line"> port = 3306</span><br><span class="line"> # 这里的server_id需要设置成不同的值，比如192.168.110的server_id是1，192.168.1.120的server_id是2</span><br><span class="line"> server_id = 1</span><br><span class="line"> socket = /tmp/mysql.sock</span><br><span class="line"></span><br><span class="line"> character_set_server = utf8</span><br><span class="line"> collation_server = utf8_bin</span><br><span class="line"> lower_case_table_names = 1</span><br><span class="line"> innodb_file_per_table</span><br><span class="line"> group_concat_max_len = -1</span><br><span class="line"> skip-name-resolve</span><br><span class="line"># autocommit = 0</span><br><span class="line"></span><br><span class="line"># Remove leading # to set options mainly useful for reporting servers.</span><br><span class="line"># The server defaults are faster for transactions and fast SELECTs.</span><br><span class="line"># Adjust sizes as needed, experiment to find the optimal values.</span><br><span class="line"># join_buffer_size = 128M</span><br><span class="line"># sort_buffer_size = 2M</span><br><span class="line"># read_rnd_buffer_size = 2M</span><br><span class="line"></span><br><span class="line">sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES</span><br></pre></td></tr></table></figure></p>
+<p>启动服务<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">service mysqld start</span><br></pre></td></tr></table></figure></p>
+<hr>
+<h3 id="3-设置两台服务器互相复制，即双主复制"><a href="#3-设置两台服务器互相复制，即双主复制" class="headerlink" title="3.设置两台服务器互相复制，即双主复制"></a>3.设置两台服务器互相复制，即双主复制</h3><p>以下操作在192.168.1.110上操作.<br>两条命令分别是：创建复制专用的账号，查看日志状态。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">grant GRANT REPLICATION SLAVE ON *.* TO &apos;repl&apos;@&apos;192.168.11.120&apos; IDENTIFIED BY &apos;repl&apos;;</span><br><span class="line">mysql&gt; show master status\G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">             File: mysql-bin.000001</span><br><span class="line">         Position: 120</span><br><span class="line">     Binlog_Do_DB: </span><br><span class="line"> Binlog_Ignore_DB: </span><br><span class="line">Executed_Gtid_Set:</span><br></pre></td></tr></table></figure></p>
+<p>记录下日志文件名与位置。去192.168.1.120上设置复制。<br>以下操作在192.168.1.120上进行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">grant GRANT REPLICATION SLAVE ON *.* TO &apos;repl&apos;@&apos;192.168.11.110&apos; IDENTIFIED BY &apos;repl&apos;;</span><br><span class="line">change master to master_host=&apos;192.168.1.110&apos;, master_user=&apos;repl&apos;, master_password=&apos;repl&apos;, master_log_file=&apos;mysql-bin.000001&apos;, master_log_pos=120;</span><br><span class="line">start slave;</span><br></pre></td></tr></table></figure></p>
+<p>然后通过show slave status\G查看复制进程是否成功。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">mysql&gt; show slave status \G</span><br><span class="line">*************************** 1. row ***************************</span><br><span class="line">               Slave_IO_State: Waiting for master to send event</span><br><span class="line">                  Master_Host: 192.168.11.110</span><br><span class="line">                  Master_User: repl</span><br><span class="line">                  Master_Port: 3306</span><br><span class="line">                Connect_Retry: 60</span><br><span class="line">              Master_Log_File: mysql-bin.000001</span><br><span class="line">          Read_Master_Log_Pos: 259070105</span><br><span class="line">               Relay_Log_File: centos-relay-bin.000001</span><br><span class="line">                Relay_Log_Pos: 120</span><br><span class="line">        Relay_Master_Log_File: mysql-bin.000001</span><br><span class="line">             Slave_IO_Running: Yes</span><br><span class="line">            Slave_SQL_Running: Yes</span><br><span class="line">              Replicate_Do_DB: </span><br><span class="line">          Replicate_Ignore_DB: </span><br><span class="line">           Replicate_Do_Table: </span><br><span class="line">       Replicate_Ignore_Table: </span><br><span class="line">      Replicate_Wild_Do_Table: </span><br><span class="line">  Replicate_Wild_Ignore_Table: </span><br><span class="line">                   Last_Errno: 0</span><br><span class="line">                   Last_Error: </span><br><span class="line">                 Skip_Counter: 0</span><br><span class="line">          Exec_Master_Log_Pos: 259070105</span><br><span class="line">              Relay_Log_Space: 259070489</span><br><span class="line">              Until_Condition: None</span><br><span class="line">               Until_Log_File: </span><br><span class="line">                Until_Log_Pos: 0</span><br><span class="line">           Master_SSL_Allowed: No</span><br><span class="line">           Master_SSL_CA_File: </span><br><span class="line">           Master_SSL_CA_Path: </span><br><span class="line">              Master_SSL_Cert: </span><br><span class="line">            Master_SSL_Cipher: </span><br><span class="line">               Master_SSL_Key: </span><br><span class="line">        Seconds_Behind_Master: 0</span><br><span class="line">Master_SSL_Verify_Server_Cert: No</span><br><span class="line">                Last_IO_Errno: 0</span><br><span class="line">                Last_IO_Error: </span><br><span class="line">               Last_SQL_Errno: 0</span><br><span class="line">               Last_SQL_Error: </span><br><span class="line">  Replicate_Ignore_Server_Ids: </span><br><span class="line">             Master_Server_Id: 1</span><br><span class="line">                  Master_UUID: 016bf7ec-38c0-11e4-ba3f-fa163e1246bf</span><br><span class="line">             Master_Info_File: /usr/local/mysql-advanced-5.6.13-linux-glibc2.5-x86_64/data/master.info</span><br><span class="line">                    SQL_Delay: 0</span><br><span class="line">          SQL_Remaining_Delay: NULL</span><br><span class="line">      Slave_SQL_Running_State: Slave has read all relay log; waiting for the slave I/O thread to update it</span><br><span class="line">           Master_Retry_Count: 86400</span><br><span class="line">                  Master_Bind: </span><br><span class="line">      Last_IO_Error_Timestamp: </span><br><span class="line">     Last_SQL_Error_Timestamp: </span><br><span class="line">               Master_SSL_Crl: </span><br><span class="line">           Master_SSL_Crlpath: </span><br><span class="line">           Retrieved_Gtid_Set: </span><br><span class="line">            Executed_Gtid_Set: </span><br><span class="line">                Auto_Position: 0</span><br><span class="line">1 row in set (0.00 sec)</span><br></pre></td></tr></table></figure></p>
+<p>主要查看下面这两个状态是否正常，及bin-log文件名和位置是否和192.168.11.110上的show master status\G里面的数据是否一致。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Slave_IO_Running: Yes</span><br><span class="line">Slave_SQL_Running: Yes</span><br></pre></td></tr></table></figure></p>
+<p>如果这些数据都正常，说明192.168.11.120复制192.168.11.110是ok的。<br>执行show master status\G获取日志相关信息供下面的复制用。</p>
+<p>然后，回到192.168.11.110上，与之前的步骤差不多，设置192.168.11.110对192.168.11.120的复制<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">change master to master_host=&apos;192.168.1.120&apos;, master_user=&apos;repl&apos;, master_password=&apos;repl&apos;, master_log_file=&apos;mysql-bin.000001&apos;, master_log_pos=120;</span><br><span class="line">start slave;</span><br></pre></td></tr></table></figure></p>
+<h2 id="最后就是如在192-168-11-120上的操作一样检查复制是否ok了，不再赘述。"><a href="#最后就是如在192-168-11-120上的操作一样检查复制是否ok了，不再赘述。" class="headerlink" title="最后就是如在192.168.11.120上的操作一样检查复制是否ok了，不再赘述。"></a>最后就是如在192.168.11.120上的操作一样检查复制是否ok了，不再赘述。</h2><h3 id="4-最后说一下有可能复制不成功的原因："><a href="#4-最后说一下有可能复制不成功的原因：" class="headerlink" title="4.最后说一下有可能复制不成功的原因："></a>4.最后说一下有可能复制不成功的原因：</h3><h2 id="按照教程一步一步来了，还是不能成功设置复制。这里首先要检查mysql服务器防火墙是否放开3306端口，然后检查两台服务器是否可以相互ping通。基本就是网络问题，mysql在主从复制上做的还是挺好的。"><a href="#按照教程一步一步来了，还是不能成功设置复制。这里首先要检查mysql服务器防火墙是否放开3306端口，然后检查两台服务器是否可以相互ping通。基本就是网络问题，mysql在主从复制上做的还是挺好的。" class="headerlink" title="按照教程一步一步来了，还是不能成功设置复制。这里首先要检查mysql服务器防火墙是否放开3306端口，然后检查两台服务器是否可以相互ping通。基本就是网络问题，mysql在主从复制上做的还是挺好的。"></a>按照教程一步一步来了，还是不能成功设置复制。这里首先要检查mysql服务器防火墙是否放开3306端口，然后检查两台服务器是否可以相互ping通。基本就是网络问题，mysql在主从复制上做的还是挺好的。</h2><h3 id="5-困境中的“最佳”实践"><a href="#5-困境中的“最佳”实践" class="headerlink" title="5.困境中的“最佳”实践"></a>5.困境中的“最佳”实践</h3><p>我们项目之前是用的haproxy代理做mysql的负载均衡，请求会随机分到两台机器上，时间长了经常出现两台机器的复制进程不同步，不得不重新设置日志同步位置。后来只好做被动的Dual-Master模式了，即不再使用haproxy代理两台机器，让192.168.11.110和192.168.11.120通过keepalived使用同一个vip(虚拟ip)，外部请求通过vip来访问数据库服务。只有在其中的一台正在提供服务的机器宕机后，vip才会漂移到另外一台备份机上，继续提供服务。这样就不会产生主动双主同时做写操作，造成复制误差甚至失败。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/linux/">linux</a>, <a href="/tags/mysql/">mysql</a>
+  </div>
+
+        <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">
+    </a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">
+    </a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">
+    </a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">
+    </a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">
+    </a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">
+    </a>
+</div>
+<script>
+    window._bd_share_config = {
+        "common": {
+            "bdSnsKey": {},
+            "bdText": "",
+            "bdMini": "1",
+            "bdMiniList": false,
+            "bdPic": "",
+            "bdStyle": "1",
+            "bdSize": "16"
+        },
+        "share": {},
+        "image": {
+            "viewList": ["qzone", "tsina", "tqq", "renren", "weixin"],
+            "viewText": "分享到：",
+            "viewSize": "16"
+        }
+    };
+    with(document) 0[(getElementsByTagName('head')[0] || body).appendChild(createElement('script')).src = 
+            'http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion=' 
+                    + ~ ( - new Date() / 36e5)];
+</script>
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="" data-title="mysql双主集群搭建" data-url="http://cw760.github.io/2015/05/25/mysql双主集群搭建/"></div>
+<!-- 多说评论框 end -->
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div align="center">
+<img src="/img/head.jpg" alt="logo"/>
+<br><a href="mailto:cw760@163.com">cw760@163.com</a>
+<br>
+<br>
+</div>
+
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:cw760.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/ceph/">ceph</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/">haproxy</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>3</small></li>
+  
+    <li><a href="/categories/nagios/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/ceph/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>2</small></li>
+  
+    <li><a href="/categories/nagios/">nagios</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/nginx/">nginx</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/VMware/" style="font-size: 10px;">VMware</a> <a href="/tags/ceph/" style="font-size: 10px;">ceph</a> <a href="/tags/gitlab/" style="font-size: 10px;">gitlab</a> <a href="/tags/haproxy/" style="font-size: 10px;">haproxy</a> <a href="/tags/linux/" style="font-size: 20px;">linux</a> <a href="/tags/mysql/" style="font-size: 15px;">mysql</a> <a href="/tags/nagios/" style="font-size: 10px;">nagios</a> <a href="/tags/nginx/" style="font-size: 10px;">nginx</a> <a href="/tags/tomcat/" style="font-size: 10px;">tomcat</a> <a href="/tags/转载/" style="font-size: 10px;">转载</a> <a href="/tags/运维/" style="font-size: 10px;">运维</a>
+  </div>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://ruikye.com/" title="Ruikye's Blog">Ruikye</a></li>
+<li><a href="http://zipperary.com/" title="Zippera's Blog">Zippera</a></li>
+<li><a href="http://planet.linuxdeepin.com/" title="国产优秀的基于ubuntu的linux发行版">Deepin</a></li>
+<li><a href="http://hrtsea.com/" title="著名winrar汉化作者——烈火的个人博客">心海e站</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2018 cw760
+  
+&nbsp;&nbsp;
+	<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1254029696'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1254029696%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"cw760"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>haproxy学习笔记 | cw760&#39;s blog</title>
+  <meta name="author" content="cw760">
+  
+  <meta name="description" content="Something in the development">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="haproxy学习笔记"/>
+  <meta property="og:site_name" content="cw760&#39;s blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="alternate" href="/atom.xml" title="cw760&#39;s blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">cw760&#39;s blog</a></h1>
+  <h2><a href="/">工作上的积累，生活中的随笔，人生里的感悟</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-09-13T05:29:32.000Z"><a href="/2014/09/13/haproxy学习笔记/">2014-09-13</a></time>
+      
+      
+  
+    <h1 class="title">haproxy学习笔记</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2 id="环境说明"><a href="#环境说明" class="headerlink" title="环境说明"></a>环境说明</h2><p>一台haproxy的负载均衡服务器：</p>
+<ul>
+<li>192.168.11.184</li>
+</ul>
+<p>两台Dual-Master的mysql集群：</p>
+<ul>
+<li>192.168.11.180</li>
+<li>192.168.11.181</li>
+</ul>
+<a id="more"></a>
+<h2 id="haproxy1-5-3的安装"><a href="#haproxy1-5-3的安装" class="headerlink" title="haproxy1.5.3的安装"></a>haproxy1.5.3的安装</h2><p>下载<a href="http://www.haproxy.org/download/1.5/src/haproxy-1.5.3.tar.gz" target="_blank" rel="noopener">haproxy1.5.3</a>的源码<br>解压到/usr/local/<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar zxvf haproxy-1.5.3.tar.gz -C /usr/local/</span><br></pre></td></tr></table></figure></p>
+<p>建立haproxy的软连接，方便以后升级（貌似这货没有什么升级的必要）.然后cd进去编译安装。<br>注意：haproxy在编译的时候需要指定内核版本，即TARGET参数，请使用<strong>uname -a</strong>命令确定服务器内核版本。</p>
+<ul>
+<li>linux26     适用于Linux 2.2</li>
+<li>linux24        适用于Linux 2.4及以上版本(默认)</li>
+<li>linux24e       适用于Linux 2.4 with support for a working epoll (&gt; 0.21)</li>
+<li>linux26        适用于Linux 2.6及以上版本</li>
+<li>linux2628      适用于Linux 2.6.28, 3.x, 及以上版本 (enables splice and tproxy)</li>
+<li>solaris        适用于Solaris 8 or 10 (others untested)</li>
+<li>freebsd        适用于FreeBSD 5 to 10 (others untested)</li>
+<li>osx            适用于Mac OS/X</li>
+<li>openbsd        适用于OpenBSD 3.1 to 5.2 (others untested)</li>
+<li>aix51          适用于AIX 5.1</li>
+<li>aix52          适用于AIX 5.2</li>
+<li>cygwin         适用于Cygwin</li>
+<li>generic        适用于其他系统或版本</li>
+<li>custom         自定义参数</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">cd /usr/local</span><br><span class="line">ln -s haproxy-1.5.3 haproxy</span><br><span class="line">cd haproxy</span><br><span class="line">make TARGET=linux2628 PREFIX=/usr/local/haproxy</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
+<h2 id="haproxy1-5-3的配置及使用"><a href="#haproxy1-5-3的配置及使用" class="headerlink" title="haproxy1.5.3的配置及使用"></a>haproxy1.5.3的配置及使用</h2><p>在安装目录新建haproxy.cfg配置文件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">touch haproxy.cfg</span><br></pre></td></tr></table></figure></p>
+<p>编辑haproxy.cfg<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">#全局配置</span><br><span class="line">global </span><br><span class="line">        log     127.0.0.1 local0	#全局日志。在后面详解如何配置</span><br><span class="line">        maxconn 40000 			#单个进程的最大连接数</span><br><span class="line">        chroot  /usr/local/haproxy</span><br><span class="line">        user    haproxy</span><br><span class="line">        group   haproxy</span><br><span class="line">        #debug</span><br><span class="line">        daemon		#是否以守护进程在后台运行，相当于haproxy里的-D命令。与debug方式互斥</span><br><span class="line">        nbproc  1 	#指定作为守护进程运行的时候，需要创建多少个进程，默认只创建1个，需要daemon模式开启</span><br><span class="line">        spread-checks 2</span><br><span class="line">        quiet</span><br><span class="line">        pidfile /usr/local/haproxy/haproxy.pid #指定haproxy的pid文件</span><br><span class="line"></span><br><span class="line">#默认配置</span><br><span class="line">defaults</span><br><span class="line">        log     global 			#采用全局配置中的日志配置</span><br><span class="line">        mode    http 			#模式</span><br><span class="line">        option  dontlognull		#不记录空连接</span><br><span class="line">        retries 3 			#连接失败后的重试次数</span><br><span class="line">        option  redispatch 		#在连接失败或断开的情况下，允许当前会话被重新分发</span><br><span class="line">        maxconn 2000</span><br><span class="line">        timeout server          1m</span><br><span class="line">        timeout connect         1m</span><br><span class="line">        timeout client          1m</span><br><span class="line">        timeout http-request    1m</span><br><span class="line">        timeout queue           1m</span><br><span class="line"></span><br><span class="line">#监听haproxy状态</span><br><span class="line">listen status</span><br><span class="line">        mode    http</span><br><span class="line">        bind    0.0.0.0:80			#监听端口</span><br><span class="line">        stats   enable</span><br><span class="line">        stats   uri     /status			#统计页面uri</span><br><span class="line">        stats 	refresh	10s			#自动刷新间隔</span><br><span class="line">        stats   realm   Global\ statistics	#统计页面密码框上的提示文本</span><br><span class="line">        stats   auth    admin:admin		#用户名和密码</span><br><span class="line">        stats 	hide-version			#统计页面隐藏haproxy的版本信息</span><br><span class="line"></span><br><span class="line">#监听mysql集群的情况</span><br><span class="line">listen mysql-cluster</span><br><span class="line">        mode    tcp</span><br><span class="line">        bind    0.0.0.0:3306			#监听端口</span><br><span class="line">        log     global</span><br><span class="line">        log     127.0.0.1:514 local1  info   #mysql-cluster的日志</span><br><span class="line">        option  httplog</span><br><span class="line">        option  mysql-check user haproxy 	#使用mysql-check的用户</span><br><span class="line">        balance roundrobin</span><br><span class="line">        server  mysql-cluster-1 192.168.11.180:3306 weight 1 check inter 1s rise 2 fall 2</span><br><span class="line">        server  mysql-cluster-2 192.168.11.181:3306 weight 1 check inter 1s rise 2 fall 2</span><br></pre></td></tr></table></figure></p>
+<p>说明：mysql负载均衡要用tcp模式，在使用负载均衡前，需要mysql能让haproxy的ip远程访问，inter表示健康检查的间隔，单位为毫秒 可以用1s等，fall代表健康检查失败2回后放弃检查。rise代表连续健康检查成功2此后将认为服务器可用。默认的，haproxy认为服务时永远可用的，除非加上check让haproxy确认服务是否真的可用。<br>ps:mysql中新建用户可用以下语句实现，现在还不知道mysql5.6.13版本中这样直接添加用户的默认权限是什么。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">create user &apos;haproxy&apos;@&apos;192.168.11.184&apos;;</span><br><span class="line">flush privileges;</span><br></pre></td></tr></table></figure></p>
+<p>新建haproxy的用户组及用户<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">adduser haproxy</span><br></pre></td></tr></table></figure></p>
+<p>启动haproxy<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./haproxy -f haproxy.cfg</span><br></pre></td></tr></table></figure></p>
+<p>在浏览器里输入<em>192.168.11.184/status</em>即可看到haproxy的运行状态<br><img src="/img/haproxy学习笔记/1.jpg" alt=""></p>
+<p>至此，可以看到haproxy已经正常启动及正常监控mysql集群了。<br>也可以通过haproxy监听的3306端口访问数据库了。<br><img src="/img/haproxy学习笔记/2.jpg" alt=""></p>
+<h3 id="附：日志配置"><a href="#附：日志配置" class="headerlink" title="附：日志配置"></a>附：日志配置</h3><p>haproxy配置文件中使用了系统日志，需要在/etc/rsyslog.d/haproxy.conf增加haproxy的日志配置文件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/rsyslog.d/haproxy.d/haproxy.conf</span><br></pre></td></tr></table></figure></p>
+<p>haproxy.conf内容如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">local0.* -/var/log/haproxy0a.log  #对应haproxy.cfg中配置的local0的日志</span><br><span class="line">local1.* -/var/log/haproxy1a.log  #对应haproxy.cfg中配置的local1的日志</span><br><span class="line">  </span><br><span class="line">$ModLoad imudp</span><br><span class="line"># load the imudp module for rsyslog</span><br><span class="line"># provides UDP syslog reception</span><br><span class="line"> </span><br><span class="line"># start UDP server on this port, &quot;*&quot; means all addresses</span><br><span class="line">$UDPServerRun 514</span><br><span class="line"> </span><br><span class="line"># local IP address (or name) the UDP listens should bind to</span><br><span class="line">$UDPServerAddress 127.0.0.1</span><br></pre></td></tr></table></figure></p>
+<p>ps:<br>/var/log/haproxy0a.log前边的”-“减号意味着取消日志同步写入。<br>这可以优化一下磁盘写入,尤其是在非常繁忙的系统中。<br>不过如果突然断电,可能会损失一些未写入硬盘的日志。</p>
+<p>重启syslog服务<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/etc/init.d/rsyslog restart</span><br></pre></td></tr></table></figure></p>
+<p>然后就可以在/var/log/haproxy1a.log查看mysql-cluster的日志了。</p>
+<h3 id="关于haproxy的使用，在网上发现了一篇写的比较详细的博客，大家可以去看看"><a href="#关于haproxy的使用，在网上发现了一篇写的比较详细的博客，大家可以去看看" class="headerlink" title="关于haproxy的使用，在网上发现了一篇写的比较详细的博客，大家可以去看看"></a>关于haproxy的使用，在网上发现了一篇写的比较详细的博客，大家可以去看看</h3><p><a href="http://blog.sina.com.cn/s/blog_704836f40101gm11.html" target="_blank" rel="noopener">haproxy实战配置</a></p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/haproxy/">haproxy</a>, <a href="/categories/haproxy/linux/">linux</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/haproxy/">haproxy</a>
+  </div>
+
+        <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">
+    </a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">
+    </a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">
+    </a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">
+    </a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">
+    </a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">
+    </a>
+</div>
+<script>
+    window._bd_share_config = {
+        "common": {
+            "bdSnsKey": {},
+            "bdText": "",
+            "bdMini": "1",
+            "bdMiniList": false,
+            "bdPic": "",
+            "bdStyle": "1",
+            "bdSize": "16"
+        },
+        "share": {},
+        "image": {
+            "viewList": ["qzone", "tsina", "tqq", "renren", "weixin"],
+            "viewText": "分享到：",
+            "viewSize": "16"
+        }
+    };
+    with(document) 0[(getElementsByTagName('head')[0] || body).appendChild(createElement('script')).src = 
+            'http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion=' 
+                    + ~ ( - new Date() / 36e5)];
+</script>
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="" data-title="haproxy学习笔记" data-url="http://cw760.github.io/2014/09/13/haproxy学习笔记/"></div>
+<!-- 多说评论框 end -->
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div align="center">
+<img src="/img/head.jpg" alt="logo"/>
+<br><a href="mailto:cw760@163.com">cw760@163.com</a>
+<br>
+<br>
+</div>
+
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:cw760.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/ceph/">ceph</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/">haproxy</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>3</small></li>
+  
+    <li><a href="/categories/nagios/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/ceph/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>2</small></li>
+  
+    <li><a href="/categories/nagios/">nagios</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/nginx/">nginx</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/VMware/" style="font-size: 10px;">VMware</a> <a href="/tags/ceph/" style="font-size: 10px;">ceph</a> <a href="/tags/gitlab/" style="font-size: 10px;">gitlab</a> <a href="/tags/haproxy/" style="font-size: 10px;">haproxy</a> <a href="/tags/linux/" style="font-size: 20px;">linux</a> <a href="/tags/mysql/" style="font-size: 15px;">mysql</a> <a href="/tags/nagios/" style="font-size: 10px;">nagios</a> <a href="/tags/nginx/" style="font-size: 10px;">nginx</a> <a href="/tags/tomcat/" style="font-size: 10px;">tomcat</a> <a href="/tags/转载/" style="font-size: 10px;">转载</a> <a href="/tags/运维/" style="font-size: 10px;">运维</a>
+  </div>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://ruikye.com/" title="Ruikye's Blog">Ruikye</a></li>
+<li><a href="http://zipperary.com/" title="Zippera's Blog">Zippera</a></li>
+<li><a href="http://planet.linuxdeepin.com/" title="国产优秀的基于ubuntu的linux发行版">Deepin</a></li>
+<li><a href="http://hrtsea.com/" title="著名winrar汉化作者——烈火的个人博客">心海e站</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2018 cw760
+  
+&nbsp;&nbsp;
+	<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1254029696'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1254029696%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"cw760"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+</body>
+</html>

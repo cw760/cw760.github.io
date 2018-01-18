@@ -1,0 +1,261 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Nagios安装手记 | cw760&#39;s blog</title>
+  <meta name="author" content="cw760">
+  
+  <meta name="description" content="Something in the development">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="Nagios安装手记"/>
+  <meta property="og:site_name" content="cw760&#39;s blog"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="alternate" href="/atom.xml" title="cw760&#39;s blog" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">cw760&#39;s blog</a></h1>
+  <h2><a href="/">工作上的积累，生活中的随笔，人生里的感悟</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2014-12-12T02:43:35.000Z"><a href="/2014/12/12/Nagios安装手记/">2014-12-12</a></time>
+      
+      
+  
+    <h1 class="title">Nagios安装手记</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <p>由于工作需要，需要安装一个nagios监控常用服务器，故有此安装手记。</p>
+<a id="more"></a>
+<h2 id="环境说明"><a href="#环境说明" class="headerlink" title="环境说明"></a>环境说明</h2><p>centos 6.4</p>
+<h2 id="安装依赖包及php、http"><a href="#安装依赖包及php、http" class="headerlink" title="安装依赖包及php、http"></a>安装依赖包及php、http</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum -y install httpd php gcc glibc glibc-common gd gd-devel make net-snmp</span><br></pre></td></tr></table></figure>
+<h2 id="新建用户及相应用户组"><a href="#新建用户及相应用户组" class="headerlink" title="新建用户及相应用户组"></a>新建用户及相应用户组</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">useradd -m nagios</span><br><span class="line">passwd nagios</span><br><span class="line">groupadd nagcmd</span><br><span class="line">usermod -a -G nagcmd nagios</span><br><span class="line">usermod -a -G nagcmd apache</span><br></pre></td></tr></table></figure>
+<h2 id="下载nagios及其插件、nrpe"><a href="#下载nagios及其插件、nrpe" class="headerlink" title="下载nagios及其插件、nrpe"></a>下载nagios及其插件、nrpe</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">mkdir ~/downloads</span><br><span class="line">cd ~/downloads</span><br><span class="line">wget http://prdownloads.sourceforge.net/sourceforge/nagios/nagios-4.0.8.tar.gz</span><br><span class="line">wget http://nagios-plugins.org/download/nagios-plugins-2.0.3.tar.gz</span><br><span class="line">wget http://iweb.dl.sourceforge.net/project/nagios/nrpe-2.x/nrpe-2.15/nrpe-2.15.tar.gz</span><br></pre></td></tr></table></figure>
+<h2 id="解压安装nagios"><a href="#解压安装nagios" class="headerlink" title="解压安装nagios"></a>解压安装nagios</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">tar zxvf nagios-4.0.8.tar.gz</span><br><span class="line">tar zxvf nagios-plugins-2.0.3.tar.gz</span><br><span class="line">cd nagios-4.0.8</span><br><span class="line">./configure --with-command-group=nagcmd</span><br><span class="line">make all</span><br><span class="line">make install</span><br><span class="line">make install-init</span><br><span class="line">make install-config</span><br><span class="line">make install-commandmode</span><br><span class="line">make install-webconf </span><br><span class="line">cp -R contrib/eventhandlers/ /usr/local/nagios/libexec/</span><br><span class="line">chown -R nagios:nagios /usr/local/nagios/libexec/eventhandlers</span><br><span class="line">/usr/local/nagios/bin/nagios -v /usr/local/nagios/etc/nagios.cfg</span><br><span class="line">/etc/init.d/nagios start #启动服务</span><br></pre></td></tr></table></figure>
+<h2 id="创建web用户"><a href="#创建web用户" class="headerlink" title="创建web用户"></a>创建web用户</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">htpasswd –c /usr/local/nagios/etc/htpasswd.users nagiosadmin</span><br></pre></td></tr></table></figure>
+<h2 id="安装nagios插件"><a href="#安装nagios插件" class="headerlink" title="安装nagios插件"></a>安装nagios插件</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cd ~/downloads/nagios-plugins-2.0.3</span><br><span class="line">./configure --with-nagios-user=nagios --with-nagios-group=nagios</span><br><span class="line">make</span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
+<h2 id="安装nrpe"><a href="#安装nrpe" class="headerlink" title="安装nrpe"></a>安装nrpe</h2><p>由于NRPE是通过SSL方式在监控和被监控主机上进行数据传输的，所以必须先安装ssl相关的软件包。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install openssl openssl-devel</span><br></pre></td></tr></table></figure></p>
+<p>然后编译安装nrpe<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">tar zxf nrpe-2.15.tar.gz</span><br><span class="line">cd nrpe-2.15</span><br><span class="line">./configure</span><br><span class="line">make all</span><br><span class="line">make install-plugin</span><br><span class="line">make install-daemon</span><br><span class="line">make install-daemon-config</span><br></pre></td></tr></table></figure></p>
+<p>修改/usr/local/nagios/etc/objects/commands.cfg，在文件最后追加如下内容，使之支持nrpe命令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">define command&#123;</span><br><span class="line">        command_name check_nrpe</span><br><span class="line">        command_line /usr/local/nagios/libexec/check_nrpe -H $HOSTADDRESS$ -c $ARG1$</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="让nagios和httpd开机自启"><a href="#让nagios和httpd开机自启" class="headerlink" title="让nagios和httpd开机自启"></a>让nagios和httpd开机自启</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">chkconfig --add nagios</span><br><span class="line">chkconfig --level 35 nagios on</span><br><span class="line">chkconfig --add httpd</span><br><span class="line">chkconfig --level 35 httpd on</span><br></pre></td></tr></table></figure>
+<h2 id="关闭selinux模式"><a href="#关闭selinux模式" class="headerlink" title="关闭selinux模式"></a>关闭selinux模式</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setenforce 0</span><br></pre></td></tr></table></figure>
+<h2 id="访问nagios的web界面"><a href="#访问nagios的web界面" class="headerlink" title="访问nagios的web界面"></a>访问nagios的web界面</h2><p><a href="http://192.168.11.151/nagios" target="_blank" rel="noopener">http://192.168.11.151/nagios</a></p>
+<h1 id="Ubuntu下安装nrpe"><a href="#Ubuntu下安装nrpe" class="headerlink" title="Ubuntu下安装nrpe"></a>Ubuntu下安装nrpe</h1><p>受控机为一台ubuntu 14.04的机器，ip为192.168.11.170<br>1.首先，通过apt-get安装nrpe和nagios插件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo apt-get install nagios-nrpe-server nagios-plugins</span><br></pre></td></tr></table></figure></p>
+<p>2.编辑/etc/nagios/nrpe.cfg，使之允许nagios监控主机可以访问。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">allowed_hosts=127.0.0.1,192.168.11.151</span><br></pre></td></tr></table></figure></p>
+<p>3.重启nagios-nrpe-server服务<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo service nagios-nrpe-server restart</span><br></pre></td></tr></table></figure></p>
+<p>4.从nagios监控主机上检查nrpe是否安装成功。<br>进入监控主机上的/usr/local/nagios/libexec目录下，执行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">check_nrpe -H 192.168.11.170</span><br></pre></td></tr></table></figure></p>
+<p>若返回<em>NRPE v2.12</em>的字样（nrpe版本号），即表示nrpe服务正常。</p>
+<h1 id="centos安装nrpe"><a href="#centos安装nrpe" class="headerlink" title="centos安装nrpe"></a>centos安装nrpe</h1><p>1.指定源<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rpm -Uvh http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm</span><br></pre></td></tr></table></figure></p>
+<p>2.从指定源中安装nrpe和nagios-plugins<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum --enablerepo=epel -y install nrpe nagios-plugins</span><br></pre></td></tr></table></figure></p>
+<p>3.按需要选择安装插件<br>我安装了check_disk、check_load、check_procs和check_users四个插件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum --enablerepo=epel -y install nagios-plugins-disk nagios-plugins-load nagios-plugins-procs nagios-plugins-users</span><br></pre></td></tr></table></figure></p>
+<p>4.修改nrpe配置文件<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vi /etc/nagios/nrpe.cfg</span><br></pre></td></tr></table></figure></p>
+<p>将监控机的ip加入到允许主机中<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">allowed_hosts=127.0.0.1,192.168.11.151</span><br></pre></td></tr></table></figure></p>
+<p>修改命令<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">command[check_root_disk]=/usr/lib/nagios/plugins/check_disk -w 20% -c 10% -p /</span><br><span class="line">command[check_load]=/usr/lib/nagios/plugins/check_load -w 15,10,5 -c 30,25,20</span><br></pre></td></tr></table></figure></p>
+<p>5.启动nrpe服务，并将之加入到开机启动项中<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">service nrpe start</span><br><span class="line">chkconfig nrpe on</span><br></pre></td></tr></table></figure></p>
+<h1 id="Nagios服务器配置"><a href="#Nagios服务器配置" class="headerlink" title="Nagios服务器配置"></a>Nagios服务器配置</h1><p>1.进入到nagios配置文件夹/usr/local/nagios/etc，编辑nagios.cfg文件，将<code>cfg_dir=/usr/local/nagios/etc/servers</code>这一行前面的注释去掉。<br>2.在/usr/local/nagios/etc上新建servers文件夹，并在该文件夹里新建要监控的服务配置文件。在本次示例中，我新建了一个监控tomcat服务器的配置文件以作说明。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir servers</span><br><span class="line">vi tomcat.cfg</span><br></pre></td></tr></table></figure></p>
+<p>下面是tomcat.cfg的内容：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line">#define tomcats servers</span><br><span class="line">define host &#123;</span><br><span class="line">        use             linux-server</span><br><span class="line">        host_name       web-1</span><br><span class="line">        alias           185</span><br><span class="line">        address         172.16.0.70</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">define host &#123;</span><br><span class="line">        use             linux-server</span><br><span class="line">        host_name       web-2</span><br><span class="line">        alias           186</span><br><span class="line">        address         172.16.0.27</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">define host &#123;</span><br><span class="line">        use             linux-server</span><br><span class="line">        host_name       web-3</span><br><span class="line">        alias           187</span><br><span class="line">        address         172.16.0.103</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">define host &#123;</span><br><span class="line">        use             linux-server</span><br><span class="line">        host_name       web-4</span><br><span class="line">        alias           188</span><br><span class="line">        address         172.16.0.82</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">define hostgroup &#123;</span><br><span class="line">        hostgroup_name  tomcats</span><br><span class="line">        alias           tomcat-clusters</span><br><span class="line">        members         web-1,web-2,web-3,web-4</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">define service &#123;</span><br><span class="line">        use                     local-service</span><br><span class="line">        host_name               web-1,web-2,web-3,web-4</span><br><span class="line">        service_description     check tomcat status</span><br><span class="line">        check_command           check_http!-p8080</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"># provided by nrpe</span><br><span class="line">define service &#123;</span><br><span class="line">        use                     local-service</span><br><span class="line">        host_name               web-1,web-2,web-3,web-4</span><br><span class="line">        service_description     check local disk</span><br><span class="line">        check_command           check_nrpe!check_disk</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">define service &#123;</span><br><span class="line">        use                     local-service</span><br><span class="line">        host_name               web-1,web-2,web-3,web-4</span><br><span class="line">        service_description     check local users</span><br><span class="line">        check_command           check_nrpe!check_users</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">define service &#123;</span><br><span class="line">        use                     local-service</span><br><span class="line">        host_name               web-1,web-2,web-3,web-4</span><br><span class="line">        service_description     check local load</span><br><span class="line">        check_command           check_nrpe!check_load</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">define service &#123;</span><br><span class="line">        use                     local-service</span><br><span class="line">        host_name               web-1,web-2,web-3,web-4</span><br><span class="line">        service_description     check local zombie procs</span><br><span class="line">        check_command           check_nrpe!check_zombie_procs</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">define service &#123;</span><br><span class="line">        use                     local-service</span><br><span class="line">        host_name               web-1,web-2,web-3,web-4</span><br><span class="line">        service_description     check local procs</span><br><span class="line">        check_command           check_nrpe!check_total_procs</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>3.重启nagios服务，使配置生效。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">service nagios restart</span><br></pre></td></tr></table></figure></p>
+<p><img src="/img/Nagios安装手记/1.jpg" alt=""></p>
+
+      
+    </div>
+    <footer>
+      
+        
+  
+  <div class="categories">
+    <a href="/categories/nagios/">nagios</a>, <a href="/categories/nagios/linux/">linux</a>
+  </div>
+
+        
+  
+  <div class="tags">
+    <a href="/tags/nagios/">nagios</a>
+  </div>
+
+        <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">
+    </a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">
+    </a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">
+    </a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">
+    </a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">
+    </a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">
+    </a>
+</div>
+<script>
+    window._bd_share_config = {
+        "common": {
+            "bdSnsKey": {},
+            "bdText": "",
+            "bdMini": "1",
+            "bdMiniList": false,
+            "bdPic": "",
+            "bdStyle": "1",
+            "bdSize": "16"
+        },
+        "share": {},
+        "image": {
+            "viewList": ["qzone", "tsina", "tqq", "renren", "weixin"],
+            "viewText": "分享到：",
+            "viewSize": "16"
+        }
+    };
+    with(document) 0[(getElementsByTagName('head')[0] || body).appendChild(createElement('script')).src = 
+            'http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion=' 
+                    + ~ ( - new Date() / 36e5)];
+</script>
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="" data-title="Nagios安装手记" data-url="http://cw760.github.io/2014/12/12/Nagios安装手记/"></div>
+<!-- 多说评论框 end -->
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div align="center">
+<img src="/img/head.jpg" alt="logo"/>
+<br><a href="mailto:cw760@163.com">cw760@163.com</a>
+<br>
+<br>
+</div>
+
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:cw760.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/ceph/">ceph</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/">haproxy</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>3</small></li>
+  
+    <li><a href="/categories/nagios/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/ceph/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>2</small></li>
+  
+    <li><a href="/categories/nagios/">nagios</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/nginx/">nginx</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/VMware/" style="font-size: 10px;">VMware</a> <a href="/tags/ceph/" style="font-size: 10px;">ceph</a> <a href="/tags/gitlab/" style="font-size: 10px;">gitlab</a> <a href="/tags/haproxy/" style="font-size: 10px;">haproxy</a> <a href="/tags/linux/" style="font-size: 20px;">linux</a> <a href="/tags/mysql/" style="font-size: 15px;">mysql</a> <a href="/tags/nagios/" style="font-size: 10px;">nagios</a> <a href="/tags/nginx/" style="font-size: 10px;">nginx</a> <a href="/tags/tomcat/" style="font-size: 10px;">tomcat</a> <a href="/tags/转载/" style="font-size: 10px;">转载</a> <a href="/tags/运维/" style="font-size: 10px;">运维</a>
+  </div>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://ruikye.com/" title="Ruikye's Blog">Ruikye</a></li>
+<li><a href="http://zipperary.com/" title="Zippera's Blog">Zippera</a></li>
+<li><a href="http://planet.linuxdeepin.com/" title="国产优秀的基于ubuntu的linux发行版">Deepin</a></li>
+<li><a href="http://hrtsea.com/" title="著名winrar汉化作者——烈火的个人博客">心海e站</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2018 cw760
+  
+&nbsp;&nbsp;
+	<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1254029696'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1254029696%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"cw760"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+</body>
+</html>
