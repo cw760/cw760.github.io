@@ -1,0 +1,242 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化 | Undefined</title>
+  <meta name="author" content="cw760">
+  
+  <meta name="description" content="Something in the development">
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta property="og:title" content="在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化"/>
+  <meta property="og:site_name" content="Undefined"/>
+
+  
+    <meta property="og:image" content=""/>
+  
+
+  <link href="/favicon.ico" rel="icon" type="image/x-ico">
+  <link rel="alternate" href="/atom.xml" title="Undefined" type="application/atom+xml">
+  <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
+  <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  
+
+</head>
+
+
+<body>
+  <header id="header" class="inner"><div class="alignleft">
+  <h1><a href="/">Undefined</a></h1>
+  <h2><a href="/">工作上的积累，生活中的随笔，人生里的感悟</a></h2>
+</div>
+<nav id="main-nav" class="alignright">
+  <ul>
+    
+      <li><a href="/">首页</a></li>
+    
+      <li><a href="/archives">归档</a></li>
+    
+  </ul>
+  <div class="clearfix"></div>
+</nav>
+<div class="clearfix"></div></header>
+  <div id="content" class="inner">
+    <div id="main-col" class="alignleft"><div id="wrapper"><article class="post">
+  
+  <div class="post-content">
+    <header>
+      
+        <div class="icon"></div>
+        <time datetime="2018-01-18T07:23:36.000Z"><a href="/2018/01/18/在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化/">2018-01-18</a></time>
+      
+      
+  
+    <h1 class="title">在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化</h1>
+  
+
+    </header>
+    <div class="entry">
+      
+        <h2 id="说在前面"><a href="#说在前面" class="headerlink" title="说在前面"></a>说在前面</h2><p><strong>DigitalOcean</strong>+<strong>docker</strong>+<strong>shadowsocks</strong>+<strong>serverspeed</strong>真是又快又稳定啊，而且DigitalOcean配置简单，没有AWS那么多设置项，对新手非常友好。</p>
+<p>之前使用AWS的免费一年套餐搭建Shadowsocks来翻墙，后来到期后准备续费的时候莫名其妙被封账号了。这真是送钱无门啊。后来找到了且稳定的<a href="https://m.do.co/c/4d5e9525fa21" target="_blank" rel="noopener">DigitalOcean</a>，低配版价格亲民，每月5刀，按需付费，可随时信用；配置感人，1CPU/1G内存/25G固态硬盘/1T流量，满足日常使用，看看油管、跑跑博客什么的都没问题。<br>这里分享一个注册链接，<a href="https://m.do.co/c/4d5e9525fa21" target="_blank" rel="noopener">https://m.do.co/c/4d5e9525fa21</a>，点这个链接进去注册成功后送10刀，可以免费试用两个用。</p>
+<p>本篇文章将会包括以下3个方面的内容：<br><a href="#1-DigitalOcean注册与配置">1.DigitalOcean注册与配置</a><br><a href="#2-服务器端ss配置">2.服务器端ss配置</a><br><a href="#3-服务器安装锐速进行加速">3.服务器安装锐速进行加速</a><br><a id="more"></a></p>
+<h2 id="0-概念介绍"><a href="#0-概念介绍" class="headerlink" title="0.概念介绍"></a>0.概念介绍</h2><p>DigitalOcean（以下简称DO）是美国的一家云主机提供商，其目前拥有包括美国（纽约、旧金山）、荷兰阿姆斯特丹、新加坡、英国伦敦、德国法兰克福、加拿大多伦多和印度班加罗尔共8个城市12个可选机房节点。其采用KVM虚拟机，配置高性能的SSD做储存，拥有IPv6可选项，加上服务器配备的是1000M端口，以1G内存为起点，再加上DO较低的价格$5起/月（而且还有其他方式可以获得优惠，下面会讲到），受到很多的追捧。选用这么一个主机不仅可以用来搭建ss，有一定网页制作基础的同学也可以搭建自己的个人网站，甚至可以选择DO提供的高级套餐来进行机器学习等大规模云计算。</p>
+<p><a href="https://github.com/shadowsocks" target="_blank" rel="noopener">Shadowsocks</a>是由大神clowwindy（传说是妹纸）开发的一款基于SSH的通讯方式，或者理解为SSH的一个变种。简单来说，其原理就是在墙的两边分别建立起ssh-local和ssh-server两个端口，用户PC首先基于Socks5协议与ssh-local进行通讯，其信息由ssh-local进行多种可选方式的加密后通过墙与另一侧的ssh-server通讯，该信息由ssh-server解密后再对真正的目标地址进行请求。因为ssh-local与ssh-server之间的加密理论无法解密且不含特征信息，就是普通的TCP包，因此无法被捕获或拦截。由于该程序实在太过优秀，因此作者本人被请去喝了茶后就把github上的项目删去了，只留下一句：</p>
+<blockquote>
+<p>Removed according to regulations.</p>
+</blockquote>
+<h2 id="1-DigitalOcean注册与配置"><a href="#1-DigitalOcean注册与配置" class="headerlink" title="1.DigitalOcean注册与配置"></a><a href="#1">1.DigitalOcean注册与配置</a></h2><p>DigitalOcean的官网目前在中国大陆可以正常访问，欢迎通过我的邀请链接进行注册：<a href="https://m.do.co/c/4d5e9525fa21" target="_blank" rel="noopener">点击这里</a>进入即获得10美元的优惠。现在最低价为5美元/月，因此可以说得到了免费两个月的额度。<br><img src="/img/在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化/0.png" alt=""><br><img src="/img/在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化/1.png" alt=""><br>注册很简单不再赘述，全程邮件沟通。在后面会让你添加自己的付款方式，我使用了一张双币信用卡进行注册，并不会产生费用。最后还需要身份证照片和手持身份证照片验证，直接按照邮件的提示发过去即可开通激活账号。<br>账号激活后查看账单，确认10美元到账后再进行以下操作，防止不必要的损失。</p>
+<p>你注册成功并登录之后，可以通过点击下图中的红色箭头指示的位置，进行添加一台VPS(也就是Create a droplet，小水滴，么么哒 ^_^)。<br><img src="/img/在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化/2.png" alt=""><br>然后你会看到如下界面：<br><img src="/img/在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化/3.png" alt=""><br>上图就是让你选择一个操作系统的，当时我选的是CentOs 7.4 x64，后来发现需要降级Linux内核才能安装锐速，降级Linux内核放到后面讲。<br>选择大小和套餐：<br><img src="/img/在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化/4.png" alt=""><br>其他选项不要动，防止过多的扣费。如果你是通过我的<a href="https://m.do.co/c/4d5e9525fa21" target="_blank" rel="noopener">推广链接</a>注册成功的，选择这个套餐已经够你免费使用两个月的了！<br>接下来是选择主机所在的位置，之所以我们能够通过搭建VPS进行科学上网，就是因为VPS所在的位置，比如美国，是可以无限制的访问网络的，这里我们选择旧金山的节点，也是就下图所示的这个，因为旧金山的速度还是很快的。<br><img src="/img/在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化/5.png" alt=""><br>这里提供一下<a href="http://speedtest-sfo1.digitalocean.com/" target="_blank" rel="noopener">测速地址</a>，大家可以测试一下哪个机房的网络访问最快，就把vps选到哪里。<br><img src="/img/在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化/6.png" alt=""><br>选择好节点位置后，剩下的选项可以不选择或者以后再修改，然后就点击下图中的信息进行主机创建就可以了！<br><img src="/img/在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化/7.png" alt=""><br>通过上述步骤你现在已经拥有了自己的小水滴，即你自己的VPS服务器，接下来咱们就可以在这台服务器上搭建Shadowsocks服务器代理了！</p>
+<h2 id="2-服务器端ss配置"><a href="#2-服务器端ss配置" class="headerlink" title="2.服务器端ss配置"></a><a href="#2">2.服务器端ss配置</a></h2><p>在第一步你已经搭建了一台自己的VPS，细心的你可能发现为什么搭建好系统怎么没让设置用户名密码呢？别担心，这个已经发送到你的邮箱了，你可以查收一下你的邮箱，用户为root，密码是随机生成的，我们需要在第一次登陆系统的时候重置一下密码，邮件大致内容如下：<br><img src="/img/在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化/8.png" alt=""><br>那么接下来我们就可以使用邮件里的ip和用户名密码远程登录了。<br>第一次登录会强制要求你更改密码。改过密码后就可以畅通无阻了。<br>然后安装docker并运行：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">yum install docker</span><br><span class="line">systemctl enable docker</span><br><span class="line">systemctl start docker</span><br></pre></td></tr></table></figure></p>
+<p>接着就可以使用docker来部署shadowsocks服务端了。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -dt --name ss -p 6443:6443 mritd/shadowsocks -s &quot;-s 0.0.0.0 -p 6443 -m aes-256-cfb -k test123 --fast-open&quot;</span><br></pre></td></tr></table></figure></p>
+<p>这样就启了一个shadowsocks的服务端了，监听端口是6443，密码是test123。如果想自定义端口，可改动 -p 6443:6443前面的6443为任意端口（Do不你AWS那样还需要自己去开放防火墙，它默认打开全部防火墙）;更改密码就是更改-k test123这个参数里的test123了。<br>其他参数说明及高级用法参考<a href="https://hub.docker.com/r/mritd/shadowsocks/" target="_blank" rel="noopener">DockerHub:mritd/shadowsocks</a></p>
+<h2 id="3-服务器安装锐速进行加速"><a href="#3-服务器安装锐速进行加速" class="headerlink" title="3.服务器安装锐速进行加速"></a><a href="#3">3.服务器安装锐速进行加速</a></h2><p>如果没有对服务器进行优化的话，代理的速度可能不是很理想，我们可以安装以下锐速进行加速<br>首先，得降级内核，这里我们使用rpm安装的方式，简单快捷，命令如下:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rpm -ivh http://dl.iforday.com/kernel/kernel-3.10.0-229.1.2.el7.x86_64.rpm --force --nodeps</span><br></pre></td></tr></table></figure></p>
+<p>然后使用<code>rpm -qa|grep kernel</code>查看内核是否安装成功。如果229内核在列表中，则表示安装成功，直接<code>reboot</code>重启服务器就可切换内核。<br>重启后，使用<code>uname -a</code>确认当前内核是否降级成功。<br><img src="/img/在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化/9.png" alt=""></p>
+<p>安装锐速ServerSpeed，执行如下命令一键安装：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">wget -N --no-check-certificate \</span><br><span class="line">https://raw.githubusercontent.com/91yun/serverspeeder/master/serverspeeder-all.sh \</span><br><span class="line">&amp;&amp; bash serverspeeder-all.sh</span><br></pre></td></tr></table></figure></p>
+<p>如果日志显示<code>server is running</code>就表示锐速安装成功。小伙伴们就可以开心地去youtube上看720p喽。</p>
+<h1 id="写在后面"><a href="#写在后面" class="headerlink" title="写在后面"></a>写在后面</h1><p>教程写的难免会有遗漏，各位在搭建过程中如果遇到什么问题，可以提issus或者直接邮件沟通。</p>
+
+      
+    </div>
+    <footer>
+      
+        
+        
+  
+  <div class="tags">
+    <a href="/tags/shadowsocks/">shadowsocks</a>
+  </div>
+
+        <div class="bdsharebuttonbox">
+    <a href="#" class="bds_more" data-cmd="more">
+    </a>
+    <a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间">
+    </a>
+    <a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博">
+    </a>
+    <a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博">
+    </a>
+    <a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网">
+    </a>
+    <a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信">
+    </a>
+</div>
+<script>
+    window._bd_share_config = {
+        "common": {
+            "bdSnsKey": {},
+            "bdText": "",
+            "bdMini": "1",
+            "bdMiniList": false,
+            "bdPic": "",
+            "bdStyle": "1",
+            "bdSize": "16"
+        },
+        "share": {},
+        "image": {
+            "viewList": ["qzone", "tsina", "tqq", "renren", "weixin"],
+            "viewText": "分享到：",
+            "viewSize": "16"
+        }
+    };
+    with(document) 0[(getElementsByTagName('head')[0] || body).appendChild(createElement('script')).src = 
+            'http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion=' 
+                    + ~ ( - new Date() / 36e5)];
+</script>
+      
+      <div class="clearfix"></div>
+    </footer>
+  </div>
+</article>
+
+
+<!-- 多说评论框 start -->
+	<div class="ds-thread" data-thread-key="" data-title="在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化" data-url="http://cw760.github.io/2018/01/18/在Digitalocean上搭建Shadowsocks并使用锐速进行加速优化/"></div>
+<!-- 多说评论框 end -->
+
+</div></div>
+    <aside id="sidebar" class="alignright">
+  <div align="center">
+<img src="/img/head.jpg" alt="logo"/>
+<br>
+<br>
+</div>
+
+  <div class="search">
+  <form action="//google.com/search" method="get" accept-charset="utf-8">
+    <input type="search" name="q" results="0" placeholder="搜索">
+    <input type="hidden" name="q" value="site:cw760.github.io">
+  </form>
+</div>
+
+  
+<div class="widget tag">
+  <h3 class="title">分类</h3>
+  <ul class="entry">
+  
+    <li><a href="/categories/ceph/">ceph</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/">haproxy</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/">linux</a><small>3</small></li>
+  
+    <li><a href="/categories/nagios/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/ceph/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/haproxy/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/mysql/">mysql</a><small>2</small></li>
+  
+    <li><a href="/categories/nagios/">nagios</a><small>1</small></li>
+  
+    <li><a href="/categories/linux/nginx/">nginx</a><small>1</small></li>
+  
+  </ul>
+</div>
+
+
+  
+<div class="widget tagcloud">
+  <h3 class="title">标签云</h3>
+  <div class="entry">
+    <a href="/tags/VMware/" style="font-size: 10px;">VMware</a> <a href="/tags/ceph/" style="font-size: 10px;">ceph</a> <a href="/tags/gitlab/" style="font-size: 10px;">gitlab</a> <a href="/tags/haproxy/" style="font-size: 10px;">haproxy</a> <a href="/tags/linux/" style="font-size: 20px;">linux</a> <a href="/tags/mysql/" style="font-size: 15px;">mysql</a> <a href="/tags/nagios/" style="font-size: 10px;">nagios</a> <a href="/tags/nginx/" style="font-size: 10px;">nginx</a> <a href="/tags/shadowsocks/" style="font-size: 10px;">shadowsocks</a> <a href="/tags/tomcat/" style="font-size: 10px;">tomcat</a> <a href="/tags/转载/" style="font-size: 10px;">转载</a> <a href="/tags/运维/" style="font-size: 10px;">运维</a>
+  </div>
+</div>
+
+
+  <div class="widget tag">
+<h3 class="title">友情链接</h3>
+<ul class="entry">
+<li><a href="http://ruikye.com/" title="Ruikye's Blog">Ruikye</a></li>
+<li><a href="http://zipperary.com/" title="Zippera's Blog">Zippera</a></li>
+<li><a href="http://planet.linuxdeepin.com/" title="国产优秀的基于ubuntu的linux发行版">Deepin</a></li>
+<li><a href="http://hrtsea.com/" title="著名winrar汉化作者——烈火的个人博客">心海e站</a></li>
+</ul>
+</div>
+</aside>
+    <div class="clearfix"></div>
+  </div>
+  <footer id="footer" class="inner"><div class="alignleft">
+  
+  &copy; 2018 cw760
+  
+&nbsp;&nbsp;
+	<script type="text/javascript">var cnzz_protocol = (("https:" == document.location.protocol) ? " https://" : " http://");document.write(unescape("%3Cspan id='cnzz_stat_icon_1254029696'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s95.cnzz.com/z_stat.php%3Fid%3D1254029696%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"));</script>
+</div>
+
+<!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"cw760"};
+	(function() {
+		var ds = document.createElement('script');
+		ds.type = 'text/javascript';ds.async = true;
+		ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+		ds.charset = 'UTF-8';
+		(document.getElementsByTagName('head')[0] 
+		 || document.getElementsByTagName('body')[0]).appendChild(ds);
+	})();
+	</script>
+<!-- 多说公共JS代码 end -->
+<div class="clearfix"></div></footer>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="/js/jquery.imagesloaded.min.js"></script>
+<script src="/js/gallery.js"></script>
+
+
+
+
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.css" media="screen" type="text/css">
+<script src="/fancybox/jquery.fancybox.pack.js"></script>
+<script type="text/javascript">
+(function($){
+  $('.fancybox').fancybox();
+})(jQuery);
+</script>
+
+
+</body>
+</html>
