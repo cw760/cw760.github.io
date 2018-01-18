@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>解决VMware复制CentOS虚拟机后无法访问网络的问题 | cw760&#39;s blog</title>
+  <title>解决VMware复制CentOS虚拟机后无法访问网络的问题 | Undefined</title>
   <meta name="author" content="cw760">
   
   <meta name="description" content="Something in the development">
@@ -12,14 +12,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
   <meta property="og:title" content="解决VMware复制CentOS虚拟机后无法访问网络的问题"/>
-  <meta property="og:site_name" content="cw760&#39;s blog"/>
+  <meta property="og:site_name" content="Undefined"/>
 
   
     <meta property="og:image" content=""/>
   
 
   <link href="/favicon.ico" rel="icon" type="image/x-ico">
-  <link rel="alternate" href="/atom.xml" title="cw760&#39;s blog" type="application/atom+xml">
+  <link rel="alternate" href="/atom.xml" title="Undefined" type="application/atom+xml">
   <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
@@ -29,7 +29,7 @@
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
-  <h1><a href="/">cw760&#39;s blog</a></h1>
+  <h1><a href="/">Undefined</a></h1>
   <h2><a href="/">工作上的积累，生活中的随笔，人生里的感悟</a></h2>
 </div>
 <nav id="main-nav" class="alignright">
@@ -60,9 +60,12 @@
     </header>
     <div class="entry">
       
-        <hr>
-<h3 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h3><p>在VMware中克隆或者直接物理复制得到新的虚拟机后，打开的时候会让你选择该虚拟机是否被移动或者被复制。如果你不知道该选择哪个选项的话，VMware建议选择我已复制该虚拟机(P)。然后，问题就来了：你的这台虚拟机无法上网了！<br><a id="more"></a><br><img src="/img/解决VMware复制CentOS虚拟机后无法访问网络的问题/1.jpg" alt=""></p>
-<h2 id=""><a href="#" class="headerlink" title=""></a><img src="/img/解决VMware复制CentOS虚拟机后无法访问网络的问题/2.jpg" alt=""></h2><h3 id="原因分析"><a href="#原因分析" class="headerlink" title="原因分析"></a>原因分析</h3><h2 id="很多Linux-distribution使用udev动态管理设备文件，并根据设备的信息对其进行持久化命名。例如在-Debian-etch中，udev会在系统引导的过程中识别网卡，将mac地址和网卡名称对应起来记录在udev的规则脚本中。而VMware会自动生-成虚拟机的mac地址。这样，由于基本系统的虚拟机已经记录了该虚拟机的网卡mac地址对应于网卡eth0，在克隆出的虚拟机中由于mac地址发生改-变，udev会自动将该mac对应于网卡eth1。以此类推，udev会记录所有已经识别的mac与网卡名的关系，所以每次克隆网卡名称会自动加1，而其-实kernel仅仅只识别到一张网卡，跟网卡名相关的网络配置也未发生任何变化。"><a href="#很多Linux-distribution使用udev动态管理设备文件，并根据设备的信息对其进行持久化命名。例如在-Debian-etch中，udev会在系统引导的过程中识别网卡，将mac地址和网卡名称对应起来记录在udev的规则脚本中。而VMware会自动生-成虚拟机的mac地址。这样，由于基本系统的虚拟机已经记录了该虚拟机的网卡mac地址对应于网卡eth0，在克隆出的虚拟机中由于mac地址发生改-变，udev会自动将该mac对应于网卡eth1。以此类推，udev会记录所有已经识别的mac与网卡名的关系，所以每次克隆网卡名称会自动加1，而其-实kernel仅仅只识别到一张网卡，跟网卡名相关的网络配置也未发生任何变化。" class="headerlink" title="很多Linux distribution使用udev动态管理设备文件，并根据设备的信息对其进行持久化命名。例如在 Debian etch中，udev会在系统引导的过程中识别网卡，将mac地址和网卡名称对应起来记录在udev的规则脚本中。而VMware会自动生 成虚拟机的mac地址。这样，由于基本系统的虚拟机已经记录了该虚拟机的网卡mac地址对应于网卡eth0，在克隆出的虚拟机中由于mac地址发生改 变，udev会自动将该mac对应于网卡eth1。以此类推，udev会记录所有已经识别的mac与网卡名的关系，所以每次克隆网卡名称会自动加1，而其 实kernel仅仅只识别到一张网卡，跟网卡名相关的网络配置也未发生任何变化。"></a>很多Linux distribution使用udev动态管理设备文件，并根据设备的信息对其进行持久化命名。例如在 Debian etch中，udev会在系统引导的过程中识别网卡，将mac地址和网卡名称对应起来记录在udev的规则脚本中。而VMware会自动生 成虚拟机的mac地址。这样，由于基本系统的虚拟机已经记录了该虚拟机的网卡mac地址对应于网卡eth0，在克隆出的虚拟机中由于mac地址发生改 变，udev会自动将该mac对应于网卡eth1。以此类推，udev会记录所有已经识别的mac与网卡名的关系，所以每次克隆网卡名称会自动加1，而其 实kernel仅仅只识别到一张网卡，跟网卡名相关的网络配置也未发生任何变化。</h2><h3 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a>解决办法</h3><ol>
+        <h3 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h3><hr>
+<p>在VMware中克隆或者直接物理复制得到新的虚拟机后，打开的时候会让你选择该虚拟机是否被移动或者被复制。如果你不知道该选择哪个选项的话，VMware建议选择我已复制该虚拟机(P)。然后，问题就来了：你的这台虚拟机无法上网了！<br><a id="more"></a><br><img src="/img/解决VMware复制CentOS虚拟机后无法访问网络的问题/1.jpg" alt=""><br><img src="/img/解决VMware复制CentOS虚拟机后无法访问网络的问题/2.jpg" alt=""></p>
+<h3 id="原因分析"><a href="#原因分析" class="headerlink" title="原因分析"></a>原因分析</h3><hr>
+<p>很多Linux distribution使用udev动态管理设备文件，并根据设备的信息对其进行持久化命名。例如在 Debian etch中，udev会在系统引导的过程中识别网卡，将mac地址和网卡名称对应起来记录在udev的规则脚本中。而VMware会自动生 成虚拟机的mac地址。这样，由于基本系统的虚拟机已经记录了该虚拟机的网卡mac地址对应于网卡eth0，在克隆出的虚拟机中由于mac地址发生改 变，udev会自动将该mac对应于网卡eth1。以此类推，udev会记录所有已经识别的mac与网卡名的关系，所以每次克隆网卡名称会自动加1，而其 实kernel仅仅只识别到一张网卡，跟网卡名相关的网络配置也未发生任何变化。</p>
+<h3 id="解决办法"><a href="#解决办法" class="headerlink" title="解决办法"></a>解决办法</h3><hr>
+<ol>
 <li>编辑/etc/udev/rules.d/70-persistent-net.rules，删除原来的eth0，将eth1的NAME替换eth0成。编辑好的文件如下图：<br><img src="/img/解决VMware复制CentOS虚拟机后无法访问网络的问题/3.jpg" alt=""></li>
 <li>编辑/etc/sysconfig/network-scripts/ifcfg-eth0，将HWADDR的值也改成<code>00:0C:29:08:0D:54</code>。编辑好的文件如下图：<br><img src="/img/解决VMware复制CentOS虚拟机后无法访问网络的问题/4.jpg" alt=""></li>
 <li>重启虚拟机，成功获取到ip。<br><img src="/img/解决VMware复制CentOS虚拟机后无法访问网络的问题/5.jpg" alt=""></li>
@@ -130,7 +133,6 @@
     <aside id="sidebar" class="alignright">
   <div align="center">
 <img src="/img/head.jpg" alt="logo"/>
-<br><a href="mailto:cw760@163.com">cw760@163.com</a>
 <br>
 <br>
 </div>

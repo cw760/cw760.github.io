@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>你有张良计，我有过墙梯——利用AWS免费服务搭建shadowsocks服务器教程 | cw760&#39;s blog</title>
+  <title>你有张良计，我有过墙梯——利用AWS免费服务搭建shadowsocks服务器教程 | Undefined</title>
   <meta name="author" content="cw760">
   
   <meta name="description" content="Something in the development">
@@ -12,14 +12,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
   <meta property="og:title" content="你有张良计，我有过墙梯——利用AWS免费服务搭建shadowsocks服务器教程"/>
-  <meta property="og:site_name" content="cw760&#39;s blog"/>
+  <meta property="og:site_name" content="Undefined"/>
 
   
     <meta property="og:image" content=""/>
   
 
   <link href="/favicon.ico" rel="icon" type="image/x-ico">
-  <link rel="alternate" href="/atom.xml" title="cw760&#39;s blog" type="application/atom+xml">
+  <link rel="alternate" href="/atom.xml" title="Undefined" type="application/atom+xml">
   <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
@@ -29,7 +29,7 @@
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
-  <h1><a href="/">cw760&#39;s blog</a></h1>
+  <h1><a href="/">Undefined</a></h1>
   <h2><a href="/">工作上的积累，生活中的随笔，人生里的感悟</a></h2>
 </div>
 <nav id="main-nav" class="alignright">
@@ -60,17 +60,20 @@
     </header>
     <div class="entry">
       
-        <p>利用亚马逊云AWS的一年免费套餐，搭建一个免费的shadowsocks梯子。请勿传播，谢谢。</p>
-<h2 id=""><a href="#" class="headerlink" title=""></a><a id="more"></a></h2><h3 id="1-申请AWS账号"><a href="#1-申请AWS账号" class="headerlink" title="1.申请AWS账号"></a>1.申请AWS账号</h3><p>进入注册连接注册一个新账号</p>
-<h2 id="注册过程略麻烦，倒数第二步中需要一张可用的外币或双币信用卡，注册过程会刷1USD的预授权费用，不是消费，不要担心。最后一步需要一个可以输入验证码的手机，在注册的最后一步，会让你填一个电话号码，然后给你打个电话，输入屏幕上提示的PIN码按-结束（我没注意听英语里讲的啥，凭感觉是按-结束）。"><a href="#注册过程略麻烦，倒数第二步中需要一张可用的外币或双币信用卡，注册过程会刷1USD的预授权费用，不是消费，不要担心。最后一步需要一个可以输入验证码的手机，在注册的最后一步，会让你填一个电话号码，然后给你打个电话，输入屏幕上提示的PIN码按-结束（我没注意听英语里讲的啥，凭感觉是按-结束）。" class="headerlink" title="注册过程略麻烦，倒数第二步中需要一张可用的外币或双币信用卡，注册过程会刷1USD的预授权费用，不是消费，不要担心。最后一步需要一个可以输入验证码的手机，在注册的最后一步，会让你填一个电话号码，然后给你打个电话，输入屏幕上提示的PIN码按#结束（我没注意听英语里讲的啥，凭感觉是按#结束）。"></a>注册过程略麻烦，倒数第二步中需要一张可用的外币或双币信用卡，注册过程会刷1USD的预授权费用，不是消费，不要担心。最后一步需要一个可以输入验证码的手机，在注册的最后一步，会让你填一个电话号码，然后给你打个电话，输入屏幕上提示的PIN码按#结束（我没注意听英语里讲的啥，凭感觉是按#结束）。</h2><h3 id="2-创建免费的ec2实例"><a href="#2-创建免费的ec2实例" class="headerlink" title="2.创建免费的ec2实例"></a>2.创建免费的ec2实例</h3><p>进入控制台，新建t2.micro实例。区域最好选择为东京Tokyo，其他区域网速略慢，不建议。<br>系统镜像选择CentOS7及以上版本。<br>开放22和80端口</p>
-<p>CentOS7 系统 CentOS-Extras 库中已带 Docker，可以直接安装：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo yum install docker</span><br></pre></td></tr></table></figure>
+        <p>利用亚马逊云AWS的一年免费套餐，搭建一个免费的shadowsocks梯子。<br>请勿传播，谢谢。<br><a id="more"></a></p>
+<hr>
+<h3 id="1-申请AWS账号"><a href="#1-申请AWS账号" class="headerlink" title="1.申请AWS账号"></a><a href="#1">1.申请AWS账号</a></h3><p>进入注册连接注册一个新账号<br>注册过程略麻烦，倒数第二步中需要一张可用的外币或双币信用卡，注册过程会刷1USD的预授权费用，不是消费，不要担心。最后一步需要一个可以输入验证码的手机，在注册的最后一步，会让你填一个电话号码，然后给你打个电话，输入屏幕上提示的PIN码按#结束（我没注意听英语里讲的啥，凭感觉是按#结束）。</p>
+<hr>
+<h3 id="2-创建免费的ec2实例"><a href="#2-创建免费的ec2实例" class="headerlink" title="2.创建免费的ec2实例"></a><a href="#2">2.创建免费的ec2实例</a></h3><p>进入控制台，新建t2.micro实例。区域最好选择为东京Tokyo，其他区域网速略慢，不建议。<br>系统镜像选择CentOS7及以上版本。<br>开放22和80端口</p>
+<p>CentOS7 系统 CentOS-Extras 库中已带 Docker，可以直接安装：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sudo yum install docker</span><br></pre></td></tr></table></figure></p>
 <p>安装之后启动 Docker 服务，并让它随系统启动自动加载。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo service docker start</span><br><span class="line">sudo chkconfig docker on</span><br></pre></td></tr></table></figure></p>
 <hr>
-<h3 id="3-安装Shadowsocks的Docker镜像"><a href="#3-安装Shadowsocks的Docker镜像" class="headerlink" title="3.安装Shadowsocks的Docker镜像"></a>3.安装Shadowsocks的Docker镜像</h3><p>使用以下命令下载shadowsocks的docker镜像<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull oddrationale/docker-shadowsocks</span><br></pre></td></tr></table></figure></p>
+<h3 id="3-安装Shadowsocks的Docker镜像"><a href="#3-安装Shadowsocks的Docker镜像" class="headerlink" title="3.安装Shadowsocks的Docker镜像"></a><a href="#3">3.安装Shadowsocks的Docker镜像</a></h3><p>使用以下命令下载shadowsocks的docker镜像<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker pull oddrationale/docker-shadowsocks</span><br></pre></td></tr></table></figure></p>
 <p>运行镜像，启动Shadowsocks服务。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run -d -p 80:8388 oddrationale/docker-shadowsocks -k cw760</span><br></pre></td></tr></table></figure></p>
-<h2 id="其中，-p后面的80-8388参数中的80是指ec2主机对外提供服务的端口，可以自定义（最好为1024-65535），8388是docker里面shadowsocks默认的端口。后面的-k参数是shadowsocks的密码，需要自定义，我这里用的cw760。shadowsocks默认的服务端口为8388，加密方式为aes-256-cfb，这里没有给出自定义的方式，感兴趣的读者可以自行查阅。"><a href="#其中，-p后面的80-8388参数中的80是指ec2主机对外提供服务的端口，可以自定义（最好为1024-65535），8388是docker里面shadowsocks默认的端口。后面的-k参数是shadowsocks的密码，需要自定义，我这里用的cw760。shadowsocks默认的服务端口为8388，加密方式为aes-256-cfb，这里没有给出自定义的方式，感兴趣的读者可以自行查阅。" class="headerlink" title="其中，-p后面的80:8388参数中的80是指ec2主机对外提供服务的端口，可以自定义（最好为1024~65535），8388是docker里面shadowsocks默认的端口。后面的-k参数是shadowsocks的密码，需要自定义，我这里用的cw760。shadowsocks默认的服务端口为8388，加密方式为aes-256-cfb，这里没有给出自定义的方式，感兴趣的读者可以自行查阅。"></a>其中，-p后面的80:8388参数中的80是指ec2主机对外提供服务的端口，可以自定义（最好为1024~65535），8388是docker里面shadowsocks默认的端口。后面的-k参数是shadowsocks的密码，需要自定义，我这里用的cw760。shadowsocks默认的服务端口为8388，加密方式为aes-256-cfb，这里没有给出自定义的方式，感兴趣的读者可以自行查阅。</h2><h3 id="4-配置shadowsocks客户端"><a href="#4-配置shadowsocks客户端" class="headerlink" title="4.配置shadowsocks客户端"></a>4.配置shadowsocks客户端</h3><p>windows客户端的下载地址:shadowsocks-windows</p>
-<p>服务器ip即为EC2主机的公共ip<br>服务器端口为80<br>密码cw760<br>加密方式默认aes-256-cfb即可<br>备注可不写<br><img src="/img/你有张良计，我有过墙梯——利用AWS免费服务搭建shadowsocks服务器教程/1.png" alt=""></p>
+<p>其中，-p后面的80:8388参数中的80是指ec2主机对外提供服务的端口，可以自定义（最好为1024~65535），8388是docker里面shadowsocks默认的端口。后面的-k参数是shadowsocks的密码，需要自定义，我这里用的cw760。shadowsocks默认的服务端口为8388，加密方式为aes-256-cfb，这里没有给出自定义的方式，感兴趣的读者可以自行查阅。</p>
+<hr>
+<h3 id="4-配置shadowsocks客户端"><a href="#4-配置shadowsocks客户端" class="headerlink" title="4.配置shadowsocks客户端"></a><a href="#4">4.配置shadowsocks客户端</a></h3><p>windows客户端的下载地址:shadowsocks-windows</p>
+<p>服务器ip即为EC2主机的公共ip，<br>服务器端口为80，<br>密码cw760，<br>加密方式默认aes-256-cfb即可，<br>备注可不写。<br><img src="/img/你有张良计，我有过墙梯——利用AWS免费服务搭建shadowsocks服务器教程/1.png" alt=""></p>
 
       
     </div>
@@ -134,7 +137,6 @@
     <aside id="sidebar" class="alignright">
   <div align="center">
 <img src="/img/head.jpg" alt="logo"/>
-<br><a href="mailto:cw760@163.com">cw760@163.com</a>
 <br>
 <br>
 </div>

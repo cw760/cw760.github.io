@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   
-  <title>mysql双主集群搭建 | cw760&#39;s blog</title>
+  <title>mysql双主集群搭建 | Undefined</title>
   <meta name="author" content="cw760">
   
   <meta name="description" content="Something in the development">
@@ -12,14 +12,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
   <meta property="og:title" content="mysql双主集群搭建"/>
-  <meta property="og:site_name" content="cw760&#39;s blog"/>
+  <meta property="og:site_name" content="Undefined"/>
 
   
     <meta property="og:image" content=""/>
   
 
   <link href="/favicon.ico" rel="icon" type="image/x-ico">
-  <link rel="alternate" href="/atom.xml" title="cw760&#39;s blog" type="application/atom+xml">
+  <link rel="alternate" href="/atom.xml" title="Undefined" type="application/atom+xml">
   <link rel="stylesheet" href="/css/style.css" media="screen" type="text/css">
   <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
   
@@ -29,7 +29,7 @@
 
 <body>
   <header id="header" class="inner"><div class="alignleft">
-  <h1><a href="/">cw760&#39;s blog</a></h1>
+  <h1><a href="/">Undefined</a></h1>
   <h2><a href="/">工作上的积累，生活中的随笔，人生里的感悟</a></h2>
 </div>
 <nav id="main-nav" class="alignright">
@@ -73,7 +73,11 @@
 <p>主要查看下面这两个状态是否正常，及bin-log文件名和位置是否和192.168.11.110上的show master status\G里面的数据是否一致。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Slave_IO_Running: Yes</span><br><span class="line">Slave_SQL_Running: Yes</span><br></pre></td></tr></table></figure></p>
 <p>如果这些数据都正常，说明192.168.11.120复制192.168.11.110是ok的。<br>执行show master status\G获取日志相关信息供下面的复制用。</p>
 <p>然后，回到192.168.11.110上，与之前的步骤差不多，设置192.168.11.110对192.168.11.120的复制<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">change master to master_host=&apos;192.168.1.120&apos;, master_user=&apos;repl&apos;, master_password=&apos;repl&apos;, master_log_file=&apos;mysql-bin.000001&apos;, master_log_pos=120;</span><br><span class="line">start slave;</span><br></pre></td></tr></table></figure></p>
-<h2 id="最后就是如在192-168-11-120上的操作一样检查复制是否ok了，不再赘述。"><a href="#最后就是如在192-168-11-120上的操作一样检查复制是否ok了，不再赘述。" class="headerlink" title="最后就是如在192.168.11.120上的操作一样检查复制是否ok了，不再赘述。"></a>最后就是如在192.168.11.120上的操作一样检查复制是否ok了，不再赘述。</h2><h3 id="4-最后说一下有可能复制不成功的原因："><a href="#4-最后说一下有可能复制不成功的原因：" class="headerlink" title="4.最后说一下有可能复制不成功的原因："></a>4.最后说一下有可能复制不成功的原因：</h3><h2 id="按照教程一步一步来了，还是不能成功设置复制。这里首先要检查mysql服务器防火墙是否放开3306端口，然后检查两台服务器是否可以相互ping通。基本就是网络问题，mysql在主从复制上做的还是挺好的。"><a href="#按照教程一步一步来了，还是不能成功设置复制。这里首先要检查mysql服务器防火墙是否放开3306端口，然后检查两台服务器是否可以相互ping通。基本就是网络问题，mysql在主从复制上做的还是挺好的。" class="headerlink" title="按照教程一步一步来了，还是不能成功设置复制。这里首先要检查mysql服务器防火墙是否放开3306端口，然后检查两台服务器是否可以相互ping通。基本就是网络问题，mysql在主从复制上做的还是挺好的。"></a>按照教程一步一步来了，还是不能成功设置复制。这里首先要检查mysql服务器防火墙是否放开3306端口，然后检查两台服务器是否可以相互ping通。基本就是网络问题，mysql在主从复制上做的还是挺好的。</h2><h3 id="5-困境中的“最佳”实践"><a href="#5-困境中的“最佳”实践" class="headerlink" title="5.困境中的“最佳”实践"></a>5.困境中的“最佳”实践</h3><p>我们项目之前是用的haproxy代理做mysql的负载均衡，请求会随机分到两台机器上，时间长了经常出现两台机器的复制进程不同步，不得不重新设置日志同步位置。后来只好做被动的Dual-Master模式了，即不再使用haproxy代理两台机器，让192.168.11.110和192.168.11.120通过keepalived使用同一个vip(虚拟ip)，外部请求通过vip来访问数据库服务。只有在其中的一台正在提供服务的机器宕机后，vip才会漂移到另外一台备份机上，继续提供服务。这样就不会产生主动双主同时做写操作，造成复制误差甚至失败。</p>
+<p>最后就是如在192.168.11.120上的操作一样检查复制是否ok了，不再赘述。</p>
+<hr>
+<h3 id="4-最后说一下有可能复制不成功的原因："><a href="#4-最后说一下有可能复制不成功的原因：" class="headerlink" title="4.最后说一下有可能复制不成功的原因："></a>4.最后说一下有可能复制不成功的原因：</h3><p>按照教程一步一步来了，还是不能成功设置复制。这里首先要检查mysql服务器防火墙是否放开3306端口，然后检查两台服务器是否可以相互ping通。基本就是网络问题，mysql在主从复制上做的还是挺好的。</p>
+<hr>
+<h3 id="5-困境中的“最佳”实践"><a href="#5-困境中的“最佳”实践" class="headerlink" title="5.困境中的“最佳”实践"></a>5.困境中的“最佳”实践</h3><p>我们项目之前是用的haproxy代理做mysql的负载均衡，请求会随机分到两台机器上，时间长了经常出现两台机器的复制进程不同步，不得不重新设置日志同步位置。后来只好做被动的Dual-Master模式了，即不再使用haproxy代理两台机器，让192.168.11.110和192.168.11.120通过keepalived使用同一个vip(虚拟ip)，外部请求通过vip来访问数据库服务。只有在其中的一台正在提供服务的机器宕机后，vip才会漂移到另外一台备份机上，继续提供服务。这样就不会产生主动双主同时做写操作，造成复制误差甚至失败。</p>
 
       
     </div>
@@ -137,7 +141,6 @@
     <aside id="sidebar" class="alignright">
   <div align="center">
 <img src="/img/head.jpg" alt="logo"/>
-<br><a href="mailto:cw760@163.com">cw760@163.com</a>
 <br>
 <br>
 </div>
