@@ -61,7 +61,7 @@
     <div class="entry">
       
         <h2 id="说在前面"><a href="#说在前面" class="headerlink" title="说在前面"></a>说在前面</h2><p><strong>DigitalOcean</strong>+<strong>docker</strong>+<strong>shadowsocks</strong>+<strong>serverspeed</strong>真是又快又稳定啊，而且DigitalOcean配置简单，没有AWS那么多设置项，对新手非常友好。</p>
-<p>之前使用AWS的免费一年套餐搭建Shadowsocks来翻墙，后来到期后准备续费的时候莫名其妙被封账号了。这真是送钱无门啊。后来找到了且稳定的<a href="https://m.do.co/c/4d5e9525fa21" target="_blank" rel="noopener">DigitalOcean</a>，低配版价格亲民，每月5刀，按需付费，可随时信用；配置感人，1CPU/1G内存/25G固态硬盘/1T流量，满足日常使用，看看油管、跑跑博客什么的都没问题。<br>这里分享一个注册链接，<a href="https://m.do.co/c/4d5e9525fa21" target="_blank" rel="noopener">https://m.do.co/c/4d5e9525fa21</a>，点这个链接进去注册成功后送10刀，可以免费试用两个用。</p>
+<p>之前使用AWS的免费一年套餐搭建Shadowsocks来翻墙，后来到期后准备续费的时候莫名其妙被封账号了。这真是送钱无门啊。后来找到了且稳定的<a href="https://m.do.co/c/4d5e9525fa21" target="_blank" rel="noopener">DigitalOcean</a>，低配版价格亲民，每月5刀，按需付费，可随时停用；配置感人，1CPU/1G内存/25G固态硬盘/1T流量，满足日常使用，看看油管、跑跑博客什么的都没问题。<br>这里分享一个注册链接，<a href="https://m.do.co/c/4d5e9525fa21" target="_blank" rel="noopener">https://m.do.co/c/4d5e9525fa21</a>，点这个链接进去注册成功后送10刀，可以免费试用两个用。</p>
 <p>本篇文章将会包括以下3个方面的内容：<br><a href="#1-DigitalOcean注册与配置">1.DigitalOcean注册与配置</a><br><a href="#2-服务器端ss配置">2.服务器端ss配置</a><br><a href="#3-服务器安装锐速进行加速">3.服务器安装锐速进行加速</a><br><a id="more"></a></p>
 <h2 id="0-概念介绍"><a href="#0-概念介绍" class="headerlink" title="0.概念介绍"></a>0.概念介绍</h2><p>DigitalOcean（以下简称DO）是美国的一家云主机提供商，其目前拥有包括美国（纽约、旧金山）、荷兰阿姆斯特丹、新加坡、英国伦敦、德国法兰克福、加拿大多伦多和印度班加罗尔共8个城市12个可选机房节点。其采用KVM虚拟机，配置高性能的SSD做储存，拥有IPv6可选项，加上服务器配备的是1000M端口，以1G内存为起点，再加上DO较低的价格$5起/月（而且还有其他方式可以获得优惠，下面会讲到），受到很多的追捧。选用这么一个主机不仅可以用来搭建ss，有一定网页制作基础的同学也可以搭建自己的个人网站，甚至可以选择DO提供的高级套餐来进行机器学习等大规模云计算。</p>
 <p><a href="https://github.com/shadowsocks" target="_blank" rel="noopener">Shadowsocks</a>是由大神clowwindy（传说是妹纸）开发的一款基于SSH的通讯方式，或者理解为SSH的一个变种。简单来说，其原理就是在墙的两边分别建立起ssh-local和ssh-server两个端口，用户PC首先基于Socks5协议与ssh-local进行通讯，其信息由ssh-local进行多种可选方式的加密后通过墙与另一侧的ssh-server通讯，该信息由ssh-server解密后再对真正的目标地址进行请求。因为ssh-local与ssh-server之间的加密理论无法解密且不含特征信息，就是普通的TCP包，因此无法被捕获或拦截。由于该程序实在太过优秀，因此作者本人被请去喝了茶后就把github上的项目删去了，只留下一句：</p>
@@ -163,9 +163,9 @@
   
     <li><a href="/categories/linux/">linux</a><small>3</small></li>
   
-    <li><a href="/categories/nagios/linux/">linux</a><small>1</small></li>
-  
     <li><a href="/categories/ceph/linux/">linux</a><small>1</small></li>
+  
+    <li><a href="/categories/nagios/linux/">linux</a><small>1</small></li>
   
     <li><a href="/categories/haproxy/linux/">linux</a><small>1</small></li>
   
